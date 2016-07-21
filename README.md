@@ -1,7 +1,7 @@
 DongerBot 0.1
 ============
 
-Codé par rinsa <subtlefrequency@gmail.com> pour #reddit-fr
+Codé par rinsa <subtlefrequency@gmail.com> pour #reddit-fr, avec comme base modifiée LogBot créé par Chris Oliver <chris@excid3.com>
 
 Utilisation
 -----
