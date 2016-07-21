@@ -11,8 +11,6 @@ Pour lancer le bot, il suffit de lancer le script comme n'importe quel autre scr
 
     python dongerbot.py
 
-Example logs at https://raw.github.com/excid3/logbot/master/example_logs/2011-10-22.html
-
 
 Commandes disponibles
 -----
