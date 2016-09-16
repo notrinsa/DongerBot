@@ -1,7 +1,7 @@
-DongerBot 0.1
+DongerBot 2
 ============
 
-Codé par rinsa <me@ben.ovh> pour #reddit-fr / /r/France
+Codé par rinsa <me@ben.ovh> pour #reddit-fr / /r/France, avec comme base modifiée LogBot créé par Chris Oliver <chris@excid3.com>
 
 Utilisation
 -----
