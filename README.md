@@ -11,6 +11,7 @@ Pour lancer le bot, il suffit d'exécuter le script comme n'importe quel autre s
 
     python dongerbot.py
 
+
 Commandes disponibles
 -----
 
@@ -19,6 +20,18 @@ L'argument utilisé et pris en compte est %s. Pour que celui-ci soit pris en com
 Il existe également une commande à envoyer en privé au DongerBot pour que celui-ci répète sur le canal public la phrase passée en argument, exemple :  
 
     "!repeat XnS est vraiment stupide comme gars"
+
+Structure du fichier json
+-----
+Le fichier json est décomposé de cette façon :
+    
+    ├ Catégorie
+        ├  NomDonger
+           ├ Action (action) : Message que Donger sort (not null)
+           ├ Commande (commande) : Commande déclenchant Donger (not null)
+           ├ Arguments (args): 1 (Pseudo), 2 (Texte), 3 (Spécial) (null)
+           ├ Majuscules (caps) : true (not null if args)
+           ├ Pseudo par défaut (default) : Pseudo (null)
 
 
 Configuration
