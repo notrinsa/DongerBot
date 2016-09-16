@@ -1,4 +1,4 @@
-DongerBot 0.1
+DongerBot 2
 ============
 
 Codé par rinsa <me@ben.ovh> pour #reddit-fr / /r/France
