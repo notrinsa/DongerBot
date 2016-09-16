@@ -1,0 +1,43 @@
+#-command,#-answer {
+    display: none;
+    margin: 0;
+}
+
+#-command {
+    padding-top: 10px;
+}
+
+#-answer {
+    padding-bottom: 5px;
+}
+
+#-exemple {
+    width: 100%;
+}
+
+#irc {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    height: 0px;
+}
+
+.card-action {
+    border-top: none !important;
+}
+.card-content {
+    text-align: justify;
+}
+.nickname-blue {
+	font-weight: bold;
+	color: #29b6f6;
+}
+
+.nickname-green {
+	font-weight: bold;
+	color: #80cbc4 ;
+}
+
+.nickname-lime {
+	font-weight: bold;
+	color: #d4e157;
+}
