@@ -47,6 +47,9 @@ Les commandes exécutées en public et en privé sont repertoriées dans le doss
 
 Changelog
 -----
+##### Version 2.1 - 2016092à
+- Ajout de la gestion des statistiques de chaque donger (!stats \<commande\>)
+- Logging des commandes (absent dans version 2)
 
 ##### Version 2 - 20160916
 - Refonte de la liste des actions
