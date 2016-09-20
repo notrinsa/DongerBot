@@ -2,8 +2,8 @@
 # coding: utf-8
 
 __author__ = "rinsa"
-__version__ = "1.0"
-__date__ = "2016-09-16"
+__version__ = "1.1"
+__date__ = "2016-09-20"
 __copyright__ = "Copyright (c) rinsa"
 __license__ = "GPL2"
 
@@ -11,6 +11,7 @@ __license__ = "GPL2"
 import cgi
 import os
 from os import path
+from collections import OrderedDict
 import ftplib
 import sys
 reload(sys)  
@@ -53,6 +54,7 @@ LOCATION_PATH = "/path/to/where/the/bot/is/located"
 LOGPATH = LOCATION_PATH + "logs/"
 BLACKLIST = LOCATION_PATH + "blacklist.txt"
 ACTIONS_FILE = LOCATION_PATH + "liste.json"
+STATS_FILE = LOCATION_PATH + "stats.json"
 #
 SS_COMMAND = "!repeat"
 HOSTNAME_OP = "maisonclo.se" # a static mask is preferred
@@ -142,7 +144,48 @@ class DongerBot(SingleServerIRCBot):
             if (line != user + "\n"):
                 f.write(line)
         f.close
-    
+        
+    # écris dans le fichier de stats
+    def w_stats_donger(self, donger):
+        lines = self.load_stats()
+        if donger not in lines:
+            lines[donger] = 1
+        else:
+            lines[donger] += 1
+        f = open(STATS_FILE, "w")
+        f.write(json.dumps(lines))
+        
+    # récupère les stats
+    def get_stats(self, message):
+        stats = OrderedDict(sorted(self.load_stats().items(), key=lambda t: t[1]))
+        stats = OrderedDict(reversed(list(stats.items())))
+        
+        args = re.split('\s', message)
+        full_message = message
+        # on supprime le nom de la commande
+        if len(args) > 1:
+            commande = message.replace(args[0], "", 1)
+            commande = commande.strip()
+        else:
+            commande = None
+        
+        if (len(stats) < 5):
+            length_stats = len(stats)
+        else:
+            length_stats = 5
+        
+        if (commande is not None):
+            if (commande in stats):
+                sendmsg = "×× Stats pour la commande " + commande + " : envoyée " + str(stats[commande]) + " fois ××"
+            else:
+                sendmsg = "×× Pas de stats pour la commande " + commande + " ! Peut-être serait-il temps d'en lancer une ? ××"
+        else:
+            sendmsg = "×× 5 commandes les plus utilisées ×× ×× "
+            for key, value in list(stats.items())[:5]:
+                sendmsg += key + " : " + str(value) + " fois ×× "
+            sendmsg = sendmsg + "××"
+        return sendmsg
+
     # récupère chaque utilisateur blacklisté
     def get_ignored_users(self):
         if os.path.exists(BLACKLIST) is False:
@@ -155,6 +198,7 @@ class DongerBot(SingleServerIRCBot):
     def format_message(self, donger, message, users, auteur):
         # on split les arguments
         args = re.split('\s', message)
+        full_message = message
         # on supprime le nom de la commande
         if len(args) > 1:
             message = message.replace(args[0], "", 1)
@@ -221,6 +265,8 @@ class DongerBot(SingleServerIRCBot):
             send_msg = donger_msg
             
         # return
+        message = "[" + strftime("%Y-%m-%d %H:%M:%S", localtime()) + "]   " + auteur + " : " + full_message + "\n"
+        self.write_file(message, LOGPATH + "log_command_" + strftime("%Y-%m-%d", localtime()) + ".txt")
         return send_msg
         
     # oui je suis ton ami
@@ -228,6 +274,12 @@ class DongerBot(SingleServerIRCBot):
         global CURRENT_FRIEND
         CURRENT_FRIEND = new
 
+    # charge le fichier de stats
+    def load_stats(self):
+        with open(STATS_FILE) as data_file:    
+            actions = json.load(data_file)
+        return actions
+        
     # Récupère le fichier JSON
     def load_file(self):
         with open(ACTIONS_FILE) as data_file:    
@@ -275,6 +327,7 @@ class DongerBot(SingleServerIRCBot):
         # commande dans la liste ?
         if commande in liste:
             sendmsg = self.format_message(liste[commande], message, users, auteur)
+            self.w_stats_donger(commande)
             if sendmsg is False:
                 return
             else:
@@ -305,7 +358,13 @@ class DongerBot(SingleServerIRCBot):
             if sendmsg is False:
                 return
             self.send_pub_msg(connection, sendmsg.encode('utf-8', 'ignore'))
-
+        elif commande == '!stats':
+            sendmsg = self.get_stats(message)
+            if sendmsg is False:
+                return
+            else:
+                self.send_pub_msg(connection, sendmsg)
+                
 def main():
     # Start the bot
     bot = DongerBot(SERVER, PORT, SERVER_PASS, CHANNEL, NICK, NICKPASS)
