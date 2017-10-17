@@ -11,6 +11,26 @@
       "commande": "!who",
       "args": 3,
       "caps": true
+    },
+    "afol": {
+      "action": "Je suis une AFO{0} (Adult Fan of {1}) mais pas dans le style MOCs, dans le style 'set OCD', je collectionne les {2}, et je les monte/démonte et les garde en display pour le plaisir.",
+      "commande": "!afol",
+      "args": 3,
+      "caps": false,
+      "default": "Lego"
+    },
+    "anniv": {
+      "action": "Joyeux anniversaire à notre crapule d'amour 💜 aujourd'hui tu as {1} ans, que le temps passe vite ! Tu nous en fait voir de toutes les couleurs mais qu'est ce qu'on te kiff {0} 😘🐶😍 on s'ennuierai beaucoup trop sans toi ^^",
+      "commande": "!anniv",
+      "args": 3,
+      "caps": false
+    },
+    "scal": {
+      "action": "J'ai une photo de {0} : https://i.ben.ovh/photo?",
+      "commande": "!photo",
+      "args": 3,
+      "caps": false,
+      "default": "leak"
     }
   },
   "Copypasta": {
@@ -19,32 +39,38 @@
       "commande": "!hop"
     },
     "bisou": {
-      "action": "tiens, %s un bisou : ( ° ͜ʖ͡°)╭∩╮",
+      "action": "tiens, {0} un bisou : ( ° ͜ʖ͡°)╭∩╮",
       "commande": "!bisou",
       "args": 1,
       "caps": false
     },
     "kek": {
-      "action": "LOL xD %s xD LOL",
+      "action": "LOL xD {0} xD LOL",
       "commande": "!kek",
       "args": 1,
       "caps": true
     },
     "jpp": {
-      "action": "ptdr jpp de toi %s XD",
+      "action": "ptdr jpp de toi {0} XD",
       "commande": "!jpp",
       "args": 1,
       "caps": false
     },
     "clique": {
-      "action": "╰༼ ⋋ ‸ ⋌ ༽╯ %s toi et ta cliques vous etes des guignols, vous vous croyez important car vous faitese les boss ╰༼ ⋋ ‸ ⋌ ༽╯",
+      "action": "╰༼ ⋋ ‸ ⋌ ༽╯ {0} toi et ta cliques vous etes des guignols, vous vous croyez important car vous faitese les boss ╰༼ ⋋ ‸ ⋌ ༽╯",
       "commande": "!clique",
       "args": 1,
       "caps": false
     },
     "vendre": {
-      "action": "(•_̀• ง)  %s ça me fout la rage au vendre (•_̀• ง)",
+      "action": "(•_̀• ง)  {0} ça me fout la rage au vendre (•_̀• ง)",
       "commande": "!vendre",
+      "args": 2,
+      "caps": false
+    },
+    "sploutch": {
+	  "action": "ConseilDeVie : Hommes de reddit, tentez des phrases du genre '{0}', elles feront toutes sploutch.",
+      "commande": "!cdv",
       "args": 2,
       "caps": false
     },
@@ -52,6 +78,12 @@
       "action": "¿ⓧ_ⓧ?",
       "commande": "!d"
     },
+	"tldr": {
+	  "action": "{0}: tl;dr: distrib hyper light basée sur musl (au lieu de la glibc) avec un kernel grsec, et un système de paquet proche des PKGBUILD d'Arch",
+	  "commande": "!tldr",
+	  "args": 1,
+	  "caps": false
+	},
     "merde": {
       "action": "👌👀👌👀👌👀👌👀👌👀 bonne merde bOonne merRDe 👌 cest ✔ de la bonne👌👌merde ici👌👌là👌👌👌 ici✔là ✔✔si je ne m'abuse 💯 et je m'abuse 💯 cest ça dont je parle ici là ici là (refrain: 𝓲𝓬𝓲 𝓵𝓪) mMMMMᎷМ💯 👌👌 👌НO0ОଠOOOOOОଠଠOoooᵒᵒᵒᵒᵒᵒᵒᵒᵒ👌👌👌",
       "commande": "!merde"
@@ -68,8 +100,15 @@
       "action": "(gare au fashion faux pas)",
       "commande": "!fashion"
     },
+    "marron": {
+      "action": "( * ಥ ⌂ ಥ * )  {0} a fait une grosse dépression, et il se balade avec des marrons dans sa poche 'par superstition'  ( * ಥ ⌂ ಥ * )",
+      "commande": "!marron",
+      "args": 1,
+      "caps": false,
+      "default": "mon cousin"
+    },
     "trash": {
-      "action": "👽👽 %s 👽👽 you 👉👉 are a 👌fucking👌 💩👎worthless👎💩 💫😕💀brainded💀😕💫 💦👹Scumfuck💦👹 💩💩💩Bastard pile of 💩💩💩trash 💫😕mental😕💫 👺dickface that should be 🔫🔫gunned down🔫🔫 in the street like the 💫😕degenerate😕💫 you 👉👉👉👉 are 😠😠😠",
+      "action": "👽👽 {0} 👽👽 you 👉👉 are a 👌fucking👌 💩👎worthless👎💩 💫😕💀brainded💀😕💫 💦👹Scumfuck💦👹 💩💩💩Bastard pile of 💩💩💩trash 💫😕mental😕💫 👺dickface that should be 🔫🔫gunned down🔫🔫 in the street like the 💫😕degenerate😕💫 you 👉👉👉👉 are 😠😠😠",
       "commande": "!trash",
       "args": 1,
       "caps": false
@@ -77,7 +116,7 @@
   },
   "Cul": {
     "sperme": {
-      "action": "%s tu mérites de te noyer dans tout le sperme bien tiède que je vais décharger dans ta bouche pour t'empêcher de dire autant de la merde.",
+      "action": "{0} tu mérites de te noyer dans tout le sperme bien tiède que je vais décharger dans ta bouche pour t'empêcher de dire autant de la merde.",
       "commande": "!sperme",
       "args": 1,
       "caps": false
@@ -104,6 +143,13 @@
     }
   },
   "Dongers": {
+    "okc": {
+      "action": "(́ง◉◞౪◟◉‵)ง JE SUIS {0} JE CREEPE SUR OKC (́ง◉◞౪◟◉‵)ง",
+      "commande": "!okc",
+      "args": 1,
+      "caps": true,
+      "default": "illbe"
+    },
     "molly": {
       "action": "༼つ ◕_◕ ༽つ GIVE ME MOLLY ༼つ ◕_◕ ༽つ",
       "commande": "!molly"
@@ -112,10 +158,18 @@
       "action": "ʕ ᓀ ᴥ ᓂ ʔ I FUCKING LOVE COCAINE ʕ ᓀ ᴥ ᓂ ʔ",
       "commande": "!coco"
     },
+    "mouche": {
+      "action": "乁[ᓀ˵▾˵ᓂ]ㄏ BZZZ BZZZ JE SUIS UNE MOUCHE BZZZ BZZZ 乁[ᓀ˵▾˵ᓂ]ㄏ ",
+      "commande": "!mouche"
+    },
+    "data": {
+      "action" : "໒( ි ▾ ි )७ ma partie préférée de l'open data c'est de fusionner les cellules ໒( ි ▾ ි )७",
+      "commande" : "!cosmos"
+    },
     "pousse": {
-      "action": "👍 POUSSE 👍 🔵 BLEU 🔵 POUR 🎌 SOUTENIR 🎌 💩 %s 💩",
+      "action": "👍 POUSSE 👍 🔵 BLEU 🔵 POUR 🎌 SOUTENIR 🎌 💩 {0} 💩",
       "commande": "!pousse",
-      "args": 1,
+      "args": 2,
       "caps": true
     },
     "cena": {
@@ -126,6 +180,10 @@
       "action": "੧║ ⊙ ౪ ⊙ ║ᓄ JE SUIS BRETON JE PENSE QUE LE BEURRE SALÉ ET LES CRÊPES C'EST DE LA GASTRONOMIE ੧║ ⊙ ౪ ⊙ ║ᓄ",
       "commande": "!breton"
     },
+    "france": {
+      "action": "໒( •̀ ╭ ͟ʖ╮ •́ )७ je suis france-soir j'efface les petites traces de merde de ma femme avec ma pisse ໒( •̀ ╭ ͟ʖ╮ •́ )७",
+      "commande": "!france"
+    },
     "raison": {
       "action": "┌༼▀̿ Ĺ̯▀̿༽┐ On a pas besoin de raison quand on a les dongers ༼▀̿ Ĺ̯▀̿༽┐",
       "commande": "!raison"
@@ -135,8 +193,11 @@
       "commande": "!dong"
     },
     "helix": {
-      "action": "༼つ ◕_◕ ༽つ PRAISE HELIX ༼つ ◕_◕ ༽つ",
-      "commande": "!helix"
+      "action": "༼つ ◕_◕ ༽つ PRAISE {0} ༼つ ◕_◕ ༽つ",
+      "commande": "!helix",
+      "args": 1,
+      "caps": true,
+      "default": "HELIX"
     },
     "dredi": {
       "action": "₍₍ ᕕ༼.◕ヮ◕.༽ᕗ⁾⁾ C4EST VENDREDI ₍₍ ᕕ( * ⊙ ヮ ⊙ * )ᕗ⁾⁾ C4EST SPAM DE DONGERS ₍₍ ᕕ(´◓⌓◔)ᕗ⁾⁾",
@@ -147,7 +208,7 @@
       "commande": "!salt"
     },
     "discordien": {
-      "action": "( ´ Д ｀ )ᕗ Je suis un %s. L'une des rare religion à pas faire de prosélytisme agressif et à prôner l'ouverture d'esprit. C'est pas grave que des gens prie sur des tapis orientés au degré près. ᕕ( ´ Д ｀ )ᕗ",
+      "action": "( ´ Д ｀ )ᕗ Je suis un {0}. L'une des rare religion à pas faire de prosélytisme agressif et à prôner l'ouverture d'esprit. C'est pas grave que des gens prie sur des tapis orientés au degré près. ᕕ( ´ Д ｀ )ᕗ",
       "commande": "!discordien",
       "args": 2,
       "caps": false
@@ -159,6 +220,10 @@
     "cc": {
       "action": "ຈل͜ຈ ᴊᴇ ᴄᴏᴘɪᴇ ᴄᴏʟʟᴇ ᴅᴀɴs ʟᴇ ᴄʜᴀᴛ ᴘᴀʀᴄᴇ ǫᴜᴇ ᴊᴇ sᴜɪs ᴜɴ ɢʀᴏs ᴀᴛᴛᴀʀᴅé ຈل͜ຈ",
       "commande": "!cc"
+    },
+    "crayz": {
+      "action": "C'EST MOI 💂 CRAYZ L'ANGLAIS 💂 ET 👉 JE SUIS 👈 LE 👨 SOSIE 👨 DE ⚡🔨⚡🔨⚡🔨⚡🔨 THOR 🔨⚡🔨⚡🔨⚡🔨⚡",
+      "commande": "!crayz"
     },
     "anar": {
       "action": "✿*∗˵╰༼✪ᗜ✪༽╯˵∗*✿ (AnarJospiniste) bon attendez je prépare un donger (AnarJospiniste) ✿*∗˵╰༼✪ᗜ✪༽╯˵∗*✿",
@@ -173,89 +238,96 @@
       "commande": "!musee"
     },
     "nath": {
-      "action": "ʕ༼◕  ౪  ◕✿༽ʔ JE SUIS %s JE SUIS C O Q U E T ʕ༼◕  ౪  ◕✿༽ʔ",
+      "action": "ʕ༼◕  ౪  ◕✿༽ʔ JE SUIS {0} JE SUIS C O Q U E T ʕ༼◕  ౪  ◕✿༽ʔ",
       "commande": "!nath",
       "args": 1,
       "caps": true,
       "default": "nath_n"
     },
     "nom": {
-      "action": "(•_•) Son nom? ( •_•)>⌐■-■ %s (⌐■_■)",
+      "action": "(•_•) Son nom? ( •_•)>⌐■-■ {0} (⌐■_■)",
       "commande": "!nom",
       "args": 1,
       "caps": false
     },
-    "aura": {
-      "action": "┌[ ◔ ͜ ʖ ◔ ]┐ JE SUIS %s, J'AI UNE AURA CHELOU ┌[ ◔ ͜ ʖ ◔ ]┐",
-      "commande": "!aura",
+    "rinsa": {
+      "action": "┌[ ◔ ͜ ʖ ◔ ]┐ JE SUIS {0}, J'AI UNE AURA CHELOU ┌[ ◔ ͜ ʖ ◔ ]┐",
+      "commande": "!rinsa",
       "args": 1,
       "caps": true,
       "default": "rinsa"
     },
     "con": {
-      "action": "ᕦ( ᴼ ڡ ᴼ )ᕤ ﻿Ｊｅ  ｐｅｎｓｅ  ｑｕｅ  %s  ｅｓｔ  ｕｎ  ｇｒｏｓ  ｃｏｎ ᕦ( ᴼ ڡ ᴼ )ᕤ",
+      "action": "ᕦ( ᴼ ڡ ᴼ )ᕤ ﻿Ｊｅ  ｐｅｎｓｅ  ｑｕｅ  {0}  ｅｓｔ  ｕｎ  ｇｒｏｓ  ｃｏｎ ᕦ( ᴼ ڡ ᴼ )ᕤ",
       "commande": "!con",
       "args": 1,
       "caps": false
     },
     "belly": {
-      "action": "( ರ Ĺ̯ ರೃ ) Je m'appelle %s je suis cultivé car j'ai appris Macbeth par coeur ( ರ Ĺ̯ ರೃ ) ",
+      "action": "( ರ Ĺ̯ ರೃ ) Je m'appelle {0} je suis cultivé car j'ai appris Macbeth par coeur ( ರ Ĺ̯ ರೃ ) ",
       "commande": "!belly",
       "args": 1,
       "caps": false,
       "default": "Belly"
     },
     "canlox": {
-      "action": "〜（^∇^〜) JE SUIS %s JE SUIS TELLEMENT INSIGNIFIANT QUE JE SUIS OBLIGE DE FAIRE DES DONGERS SUR MOI MEME （〜^∇^)〜",
+      "action": "〜（^∇^〜) JE SUIS {0} JE SUIS TELLEMENT INSIGNIFIANT QUE JE SUIS OBLIGE DE FAIRE DES DONGERS SUR MOI MEME （〜^∇^)〜",
       "commande": "!canlox",
       "args": 1,
       "caps": true,
       "default": "canlox"
     },
     "afro": {
-      "action": "ʕ ಡ ﹏ ಡ ʔ JE SUIS %s, JE PENSE QUE LES GENS DEVRAIENT ME RECONNAÎTRE PARCE QUE C'EST ÉVIDENT QUE JE SUIS MOI ʕ ಡ ﹏ ಡ ʔ ",
+      "action": "ʕ ಡ ﹏ ಡ ʔ JE SUIS {0}, JE PENSE QUE LES GENS DEVRAIENT ME RECONNAÎTRE PARCE QUE C'EST ÉVIDENT QUE JE SUIS MOI ʕ ಡ ﹏ ಡ ʔ ",
       "commande": "!afro",
       "args": 1,
       "caps": true,
       "default": "afrofagne"
     },
     "perry": {
-      "action": "(V●ᴥ●V) JE SUIS %s JE GARDE MON CHAPEAU DANS LE METRO POUR FAIRE CHIER LES GENS (V●ᴥ●V) ",
+      "action": "(V●ᴥ●V) JE SUIS {0} JE GARDE MON CHAPEAU DANS LE METRO POUR FAIRE CHIER LES GENS (V●ᴥ●V) ",
       "commande": "!perry",
       "args": 1,
       "caps": true,
       "default": "perry75"
     },
     "illbe": {
-      "action": "ヽ(◉◡◔)ﾉ JE SUIS %s ET J'AIME PAS LES CHINOIS ヽ(◉◡◔)ﾉ",
+      "action": "ヽ(◉◡◔)ﾉ JE SUIS {0} ET J'AIME PAS LES CHINOIS ヽ(◉◡◔)ﾉ",
       "commande": "!illbe",
       "args": 1,
       "caps": true,
       "default": "illbe"
     },
     "hyca": {
-      "action": "ᕕ| ~ ⁰ ෴ ⁰ ~ |┐ bon après, %s elle vaut combien ? ᕕ| ~ ⁰ ෴ ⁰ ~ |┐",
+      "action": "ᕕ| ~ ⁰ ෴ ⁰ ~ |┐ bon après, {0} elle vaut combien ? ᕕ| ~ ⁰ ෴ ⁰ ~ |┐",
       "commande": "!hyca",
       "args": 1,
       "caps": false,
       "default": "hycaria"
     },
+    "hyca2": {
+      "action": "╰༼ ⋋ ‸ ⋌ ༽╯ JE SUIS {0} JE COMPRENDS PAS ╰༼ ⋋ ‸ ⋌ ༽╯",
+      "commande": "!jsp",
+      "args": 1,
+      "caps": true,
+      "default": "HYCA"
+    },
     "aj": {
-      "action": "( ͡° ͜ʖ ͡°)=ε✄ JE SUIS %s JE FAIS DES CONFETTIS ( ͡° ͜ʖ ͡°)=ε✄ ",
+      "action": "( ͡° ͜ʖ ͡°)=ε✄ JE SUIS {0} JE FAIS DES CONFETTIS ( ͡° ͜ʖ ͡°)=ε✄ ",
       "commande": "!aj",
       "args": 1,
       "caps": true,
       "default": "AJ"
     },
     "dunkerque": {
-      "action": "JE SUIS %s MA PASSION C'EST DUNKERQUE ヽ(ಠ▃ಠ)ﾉ",
+      "action": "JE SUIS {0} MA PASSION C'EST DUNKERQUE ヽ(ಠ▃ಠ)ﾉ",
       "commande": "!dunkerque",
       "args": 1,
       "caps": true,
       "default": "CHEFVAUTOUR"
     },
     "poisson": {
-      "action": "(◕⌂◕⊃⊃) ＪＥ ＳＵＩＳ %s ＪＥ ＳＵＩＳ ＣＯＮ ＪＥ ＭＡＮＧＥ ＤＥＳ ＰＯＩＳＳＯＮＳ (◕⌂◕⊃⊃)",
+      "action": "(◕⌂◕⊃⊃) ＪＥ ＳＵＩＳ {0} ＪＥ ＳＵＩＳ ＣＯＮ ＪＥ ＭＡＮＧＥ ＤＥＳ ＰＯＩＳＳＯＮＳ (◕⌂◕⊃⊃)",
       "commande": "!poisson",
       "args": 1,
       "caps": true,
@@ -266,55 +338,63 @@
       "commande": "!dclauzel"
     },
     "mael": {
-      "action": "╚═། ◑ ▃ ◑ །═╝ ＪＥ ＳＵＩＳ %s ＪＥ ＳＵＩＳ Ａ Ｌ Ｔ Ｅ Ｒ ＮＡ Ｔ Ｉ Ｆ ╚═། ◑ ▃ ◑ །═╝",
+      "action": "╚═། ◑ ▃ ◑ །═╝ ＪＥ ＳＵＩＳ {0} ＪＥ ＳＵＩＳ Ａ Ｌ Ｔ Ｅ Ｒ ＮＡ Ｔ Ｉ Ｆ ╚═། ◑ ▃ ◑ །═╝",
       "commande": "!mael",
       "args": 1,
       "caps": true,
       "default": "ＭＡＥＬ"
     },
+    "anon": {
+      "action": "ᕦ| ๑ ʖ ๑ |ᕤ JE SUIS ANONBAGUETTE ET À MON BOULOT DE DÉVELOPPEUR DE JEU VIDÉO JE JOUE À UN JEU DE DÉVELOPPEMENT DE JEU VIDÉO (PS : REGARDEZ MOI CODER EN LIVE SUR MA CHAINE TWITCH) ᕦ| ๑ ʖ ๑ |ᕤ",
+      "commande": "!anon"
+    },
     "opera": {
-      "action": "ヽ༼ຈل͜ຈ༽ﾉ JE SUIS %s J'ECOUTE DE L'OPERA ET DU TRASH BLACK HEAVY GRIND SPEED METAL ヽ༼ຈل͜ຈ༽ﾉ",
+      "action": "ヽ༼ຈل͜ຈ༽ﾉ JE SUIS {0} J'ECOUTE DE L'OPERA ET DU TRASH BLACK HEAVY GRIND SPEED METAL ヽ༼ຈل͜ຈ༽ﾉ",
       "commande": "!opera",
       "args": 1,
       "caps": true,
       "default": "BELLY"
     },
     "airfrance": {
-      "action": "ᕕ（ಥʖ̯ಥ）ᕗ %s Ｍ＇Ａ EＮＥＲＶE． ＪＥ Ｌ＇ＡＩＭＡＩＳ ＢＩＥＮ ＭＡＩＳ ＩＬ Ｍ＇Ａ ＦＡＩＴ ＰＥＲＤＲＥ ＴＯＵＴ ＥＳＰＯＩＲ ＤＡＮＳ ＡＩＲＦＲＡＮＣＥ ᕕ（ಥʖ̯ಥ）ᕗ",
+      "action": "ᕕ（ಥʖ̯ಥ）ᕗ {0} Ｍ＇Ａ EＮＥＲＶE． ＪＥ Ｌ＇ＡＩＭＡＩＳ ＢＩＥＮ ＭＡＩＳ ＩＬ Ｍ＇Ａ ＦＡＩＴ ＰＥＲＤＲＥ ＴＯＵＴ ＥＳＰＯＩＲ ＤＡＮＳ ＡＩＲＦＲＡＮＣＥ ᕕ（ಥʖ̯ಥ）ᕗ",
       "commande": "!airfrance",
       "args": 1,
       "caps": true,
       "default": "ＡＦＲＯＦＡＧＮＥ"
     },
     "couilles": {
-      "action": "(✿ ◕‿◕) ᓄ✂╰U╯ Je suis %s je coupe des couilles (✿ ◕‿◕) ᓄ✂╰U╯",
+      "action": "(✿ ◕‿◕) ᓄ✂╰U╯ Je suis {0} je coupe des couilles (✿ ◕‿◕) ᓄ✂╰U╯",
       "commande": "!couilles",
       "args": 1,
       "caps": false,
-      "default": "illbe"
+      "default": "Hyca"
     },
     "cronch": {
-      "action": "♪~ ᕕ( ᐛ )ᕗ CRONCH CRONCH CRONCH JE SUIS LE COLLEGUE D' %s CRONCH CRONCH CRONCH ♪~ ᕕ( ᐛ )ᕗ",
+      "action": "♪~ ᕕ( ᐛ )ᕗ CRONCH CRONCH CRONCH JE SUIS LE COLLEGUE D' {0} CRONCH CRONCH CRONCH ♪~ ᕕ( ᐛ )ᕗ",
       "commande": "!cronch",
       "args": 1,
       "caps": true,
       "default": "AJ"
     },
+    "aj2017": {
+      "action": "Un seul ✉️ mandat ✉️ , un seul 👨 président 👨 ! 💩 AJ! 💩 POUR LA 🇫🇷 FRANCE 🇫🇷",
+      "commande": "!aj2017"
+    },
     "cry": {
-      "action": "ʕ ಡ ﹏ ಡ ʔ JE SUIS %s, JE PENSE QUE LES GENS DEVRAIENT ME RECONNAÎTRE PARCE QUE C'EST ÉVIDENT QUE JE SUIS MOI ʕ ಡ ﹏ ಡ ʔ",
+      "action": "ʕ ಡ ﹏ ಡ ʔ JE SUIS {0}, JE PENSE QUE LES GENS DEVRAIENT ME RECONNAÎTRE PARCE QUE C'EST ÉVIDENT QUE JE SUIS MOI ʕ ಡ ﹏ ಡ ʔ",
       "commande": "!cry",
       "args": 1,
       "caps": true,
       "default": "AFROFAGNE"
     },
     "vegan": {
-      "action": "ヽ(◉◡◔)ﾉ JE SUIS %s JE SUIS VEGETARIEN(NE) PARCE QUE J'AIME PAS LA VIANDE AMA ヽ(◉◡◔)ﾉ",
+      "action": "ヽ(◉◡◔)ﾉ JE SUIS {0} JE SUIS VEGETARIEN(NE) PARCE QUE J'AIME PAS LA VIANDE AMA ヽ(◉◡◔)ﾉ",
       "commande": "!vegan",
       "args": 1,
       "caps": true
     },
     "boss": {
-      "action": "ᕙ(˵ ಠ ਊ ಠ ˵)ᕗ Je suis %s, j'suis tellement une loque que je suis obligé d'aller sur internet pour jouer au boss sur reddit pour me sentir puissant ᕙ(˵ ಠ ਊ ಠ ˵)ᕗ",
+      "action": "ᕙ(˵ ಠ ਊ ಠ ˵)ᕗ Je suis {0}, j'suis tellement une loque que je suis obligé d'aller sur internet pour jouer au boss sur reddit pour me sentir puissant ᕙ(˵ ಠ ਊ ಠ ˵)ᕗ",
       "commande": "!boss",
       "args": 1,
       "caps": false
@@ -322,23 +402,65 @@
     "sc": {
       "action": "(╭ರ_⊙) Je vais visiter les profils senscritique de mes amis pour pouvoir les prendre de haut (╭ರ_⊙) ",
       "commande": "!sc"
+    },
+    "champion": {
+      "action": "ᕕ(⌐■_■)ᕗ ♪♬ {0} C'EST LA CHAMPIONS LEAGUE ᕕ(⌐■_■)ᕗ ♪♬",
+      "commande": "!champion",
+      "args": 1,
+      "caps": true
     }
   },
   "Insultes": {
     "flair": {
-      "action": "Je sais pas qui il faut supplier pour avoir un flair personnalisé, alors je viens allumer un cierge dans le temple de la perte de temps : est-ce qu'on peut avoir un flair « %s » s'il vous plaît ? Un truc bien caractéristique comme son immonde tête de bite ça serait vraiment chouette.",
+      "action": "Je sais pas qui il faut supplier pour avoir un flair personnalisé, alors je viens allumer un cierge dans le temple de la perte de temps : est-ce qu'on peut avoir un flair « {0} » s'il vous plaît ? Un truc bien caractéristique comme son immonde tête de bite ça serait vraiment chouette.",
       "commande": "!flair",
       "args": 1,
       "caps": false
     },
+    "rotule": {
+      "action": "୧( ͡ᵔ 益 ͡ᵔ )୨ Autant je suis très très sympa, on peut rigoler de moi, de mon mec, de mon fils ԅ( ◔益◔ )ᕗ mais mec je te le dis qu'une seule fois. Dis encore une fois que mon {0} est con, et je trouve ton adresse pour te péter les deux rotules. ┌( ◕ 益 ◕ )ᓄ",
+      "commande": "!rotule",
+      "args": 2,
+      "caps": false
+    },
+    "sacrer": {
+      "action": "ᕕ༼✿•̀︿•́༽ᕗ vos remarques sur {0} comme quoi c'est une invention, vous pouvez me sacrer patience avec et vous les enfoncer dans le cul ୧༼ಠ益ಠ╭∩╮༽",
+      "commande": "!sacrer",
+      "args": 2,
+      "caps": false
+    },
+    "charnier": {
+      "action": "໒(:ರωರ:)〜︻̷┻̿═━ Une très bonne chose. Foutez {0} dans un charnier. Il y est des cadavres qu'il faut qu'on tue. ( ✖ _ ✖ )",
+      "commande": "!charnier",
+      "args": 1,
+      "caps": false
+    },
+    "faires": {
+      "action": "J'ai lu beauvoir, butler, davis, feinberg, et bien d'autres ╰༼ ⋋ ‸ ⋌ ༽╯ {0}, tu merites le goulag (つ◉益◉)つ t'es un terf bio-essentialiste qui refuse de se mettre a jours ლ( ¤ 益 ¤ ) Vas te faires voire.",
+      "commande": "!faires",
+      "args": 1,
+      "caps": false
+    },
     "parasite": {
-      "action": "Tu as perdu ma confiance %s. Tu es banni à vie du sub.Tu n,apportes jamais rien de bon aux subs que tu modère.Tu es un parasite !",
+      "action": "Tu as perdu ma confiance {0}. Tu es banni à vie du sub.Tu n,apportes jamais rien de bon aux subs que tu modère.Tu es un parasite !",
       "commande": "!parasite",
       "args": 1,
       "caps": false
     },
+    "ton": {
+      "action": "(╭ರ_•́) Je vais arrêter de te répondre tant que t'as pas changé de ton {0}. C'est pas comme ça qu'on discute d'un sujet tel que celui-ci. へ། ¯͒ ʖ̯ ¯͒ །ᕤ",
+      "commande": "!ton",
+      "args": 1,
+      "caps": false
+    },
+    "alerte": {
+      "action": "J'alerte sur les conséquences d'une surexposition de {0} aux écrans : retard moteur et intellectuel, troubles de l'attention, agressivité ou extrême passivité, troubles de la relation. Ces troubles sont de plus en plus fréquents.",
+      "commande": "!alerte",
+      "args": 1,
+      "caps": false
+    },
     "supprime": {
-      "action": "J'ai jamais été si violent mais auto-supprime toi %s.Tu ne fais plus parti de mes alliés.",
+      "action": "J'ai jamais été si violent mais auto-supprime toi {0}.Tu ne fais plus parti de mes alliés.",
       "commande": "!supprime",
       "args": 1,
       "caps": false
@@ -352,7 +474,7 @@
       "commande": "!modos"
     },
     "ignore": {
-      "action": "%s, je te met dans mon ignore petite bite :)",
+      "action": "{0}, je te met dans mon ignore petite bite :)",
       "commande": "!ignore",
       "args": 1,
       "caps": false
@@ -382,37 +504,67 @@
   },
   "Random": {
     "bash": {
-      "action": "%s tu peux installer Powershell Linux sur Bash qui tourne sur Windows 10. Faut juste prendre les dépendances d'Ubuntu 14.04 pour PS, choper le .deb et installer et ça fonctionne. Et si t'es vraiment tourné bondage, sache que j'ai essayé la PowershellCeption, ça marche.",
+      "action": "{0} tu peux installer Powershell Linux sur Bash qui tourne sur Windows 10. Faut juste prendre les dépendances d'Ubuntu 14.04 pour PS, choper le .deb et installer et ça fonctionne. Et si t'es vraiment tourné bondage, sache que j'ai essayé la PowershellCeption, ça marche.",
       "commande": "!bash",
       "args": 1,
       "caps": false
     },
+    "chaton": {
+      "action": "{0} EST-CE QUE TU PEUX LEAK DES PHOTOS DU CHATON STP",
+      "commande": "!chaton",
+      "args": 1,
+      "caps": true,
+      "default": "ANONBAGUETTE"
+    },
+    "kardashian": {
+      "action": "ლ(́◉◞౪◟◉‵ლ) Y'A UNE 3EME KARDASHIAN ENCEINTE. ok ça marche, je télécharge la dernière saison ce soir #noshame ლ(́◉◞౪◟◉‵ლ)",
+      "commande": "!kardashian"
+    },
+    "sport": {
+      "action": "ヽ(◉◡◔)ﾉ J'ai feint l'ignorance car de toute manière, je devais partir au sport ヽ(◉◡◔)ﾉ",
+      "commande": "!sport"
+    },
+    "prout": {
+      "action": "Prout",
+      "commande": "!prout"
+    },
+    "attention": {
+      "action": "Donne moi une seule bonne raison de t'accorder plus de 10 secondes de mon attention {0}.",
+      "commande": "!attention",
+      "args": 1,
+      "caps": false,
+      "default": "coco"
+    },
+	"hands": {
+	  "action": "¯\\_(ツ)_/¯",
+	  "commande": "!shrug"
+	},
     "rpng": {
-      "action": "%s si tu es chez online et que tu utilises le RPNG: leurs nouveaux switches se gauffrent niveau ACLs si tu as plus de 30 machines sur ton groupe rpnG",
+      "action": "{0} si tu es chez online et que tu utilises le RPNG: leurs nouveaux switches se gauffrent niveau ACLs si tu as plus de 30 machines sur ton groupe rpnG",
       "commande": "!rpng",
       "args": 1,
       "caps": false
     },
     "bgp": {
-      "action": "%s il te faut un ou plusieurs routeurs BGP (et la/les sessions BGP qui vont bien avec ton interco, mais c'est possible aussi de taper 'en dehors' du réseau de ton interco pour la session BGP) pour annoncer ton bloc et interconnectés avec les routeurs BGP d'autres transitaires/peers et propager la/les routes que tu annonces.",
+      "action": "{0} il te faut un ou plusieurs routeurs BGP (et la/les sessions BGP qui vont bien avec ton interco, mais c'est possible aussi de taper 'en dehors' du réseau de ton interco pour la session BGP) pour annoncer ton bloc et interconnectés avec les routeurs BGP d'autres transitaires/peers et propager la/les routes que tu annonces.",
       "commande": "!bgp",
       "args": 1,
       "caps": false
     },
     "string" : {
-      "action": "%s dans les constructeurs, je dois déclarer par exemple en string pluie, vent, soleil et c'est directement à l'interieur de ça que je fais par exemple un if que si i j k sont de jour et que c'est en été et bien ça retourne soleil?",
+      "action": "{0} dans les constructeurs, je dois déclarer par exemple en string pluie, vent, soleil et c'est directement à l'interieur de ça que je fais par exemple un if que si i j k sont de jour et que c'est en été et bien ça retourne soleil?",
       "commande" : "!string",
       "args": 1,
       "caps": false
     },
     "verre" : {
-      "action": "J'ai esquivé un verre avec %s parce que bon, hein.",
+      "action": "J'ai esquivé un verre avec {0} parce que bon, hein.",
       "commande" : "!verre",
-      "args": 1,
+      "args": 2,
       "caps": false
     },
     "lire": {
-      "action": "%s est intelligent, il sait déjà lire de façon à peu près fluide, mais faudrait voir le bordel qu'il fout à la cantine tous les midis. La dernière fois on a retrouvé de la purée de brocolis dans le caleçon de Jimmy par sa faute. Il ne sait vraiment pas se tenir.",
+      "action": "{0} est intelligent, il sait déjà lire de façon à peu près fluide, mais faudrait voir le bordel qu'il fout à la cantine tous les midis. La dernière fois on a retrouvé de la purée de brocolis dans le caleçon de Jimmy par sa faute. Il ne sait vraiment pas se tenir.",
       "commande": "!lire",
       "args": 1,
       "caps": false
@@ -472,6 +624,14 @@
     "lafarge": {
       "action": "HEYYYYYYYYYYYSALUTÀTOUSLESAMISC'ESTDAVIDLAFARGEPOKÉMONJ'ESPÈREQUEVOUUUUUUUUSALLEZBIENENTOUTCASMOIÇAVASUPERAUJOURD'HUIJESUISAVECMIIIISSJIRACHI",
       "commande": "!david"
+    },
+    "langue": {
+      "action": "ᕕ⁞ ᵒ̌ 〜 ᵒ̌ ⁞ᕗ Je l'embrasse pas sur la bouche le veau. Il met beaucoup de langue. ᕕ⁞ ᵒ̌ 〜 ᵒ̌ ⁞ᕗ",
+      "commande": "!langue"
+    },
+    "chante": {
+      "action": "ᕙ(▀̿̿Ĺ̯̿̿▀̿ ̿) ᕗ La clique du sub fait ce qui lui chante ᕙ(▀̿̿Ĺ̯̿̿▀̿ ̿) ᕗ",
+      "commande": "!chante"
     }
   }
 }
