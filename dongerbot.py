@@ -74,7 +74,7 @@ class Pseudo(BaseModel):
     """ Classe Pseudo """
     id = peewee.PrimaryKeyField()
     pseudo = peewee.CharField()
-    temps_ami = peewee.FloatField()
+    temps_ami = peewee.IntegerField()
     nombre_messages = peewee.FloatField()
     nombre_commandes = peewee.FloatField()
     blacklist = peewee.BooleanField()
@@ -90,16 +90,13 @@ class Archives(BaseModel):
 
 class Parametres(BaseModel):
     """ Classe Paramètres """
-    bot_available = peewee.BooleanField()  # disponibilité du bot
-    friend_available = peewee.BooleanField()  # disponibilité de !friend
-    friend_available_override = peewee.BooleanField()  # override admin de !friend
-    spam_limit = peewee.FloatField()  # limite en secondes entre chaque message
-    current_friend = peewee.ForeignKeyField(Pseudo, related_name='actuel')  # ami actuel
-    prev_friend = peewee.ForeignKeyField(Pseudo, related_name='precedent')  # ami précédent
-    channel = peewee.CharField()  # chan actuel
-
-    class Meta:
-        primary_key = False
+    bot_available = peewee.BooleanField()               # disponibilité du bot
+    friend_available = peewee.BooleanField()            # disponibilité de !friend
+    friend_available_override = peewee.BooleanField()   # override admin de !friend
+    spam_limit = peewee.IntegerField()                  # limite en secondes entre chaque message
+    current_friend = peewee.ForeignKeyField(Pseudo, related_name='actuel')      # ami actuel
+    prev_friend = peewee.ForeignKeyField(Pseudo, related_name='precedent')      # ami précédent
+    channel = peewee.CharField(primary_key=True)                        # chan actuel
 
 
 class DongerBot(SingleServerIRCBot):
@@ -119,7 +116,7 @@ class DongerBot(SingleServerIRCBot):
         self.last_uses = {}
         self.current_friend_time = time.time()
 
-        self.settings = Parametres.get()
+        self.settings = Parametres.get(channel=self.chans)
 
         self.auteur = None
 
@@ -216,8 +213,8 @@ class DongerBot(SingleServerIRCBot):
                     argument = _message[2]
                     self.change_parametre(parametre, argument)
                 if commande.lower() in ["get"]:
-                    if reste in self.settings:
-                        envoi_message = "Paramètre " + reste + " : " + str(self.settings[reste])
+                    if getattr(self.settings, reste, None) is not None:
+                        envoi_message = "Paramètre " + reste + " : " + str(getattr(self.settings, reste))
 
             """
                 dispatch spécial, not admin
@@ -415,8 +412,8 @@ class DongerBot(SingleServerIRCBot):
                 self.save_parametre("bot_available", True)
 
     def save_parametre(self, parametre, argument):
-        Parametres.update(**{parametre: argument}).execute()
-        self.settings = Parametres.get()
+        setattr(self.settings, parametre, argument)
+        self.settings.save()
 
     @staticmethod
     def reset_friends():
@@ -502,8 +499,11 @@ class DongerBot(SingleServerIRCBot):
         pseudo.blacklist = remove
         pseudo.save()
 
-    def add_friend(self, friend):
-        """ écris dans le fichier d'amis """
+    def refresh_friends(self):
+        """ Rafraichit le temps de l'ami actuel """
+
+        if self.settings.friend_available_override is False:
+            return
 
         if self.settings.friend_available is True:
             """ ORM Get User"""
@@ -512,17 +512,6 @@ class DongerBot(SingleServerIRCBot):
             ami.save()
 
             self.current_friend_time = time.time()
-
-    def refresh_friends(self):
-        """ Rafraichit le temps de l'ami actuel """
-
-        if self.settings.friend_available_override is False:
-            return
-
-        try:
-            self.add_friend(self.settings.current_friend.pseudo)
-        except Pseudo.DoesNotExist:
-            return
 
     @staticmethod
     def load_file():
