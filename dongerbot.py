@@ -414,9 +414,9 @@ class DongerBot(SingleServerIRCBot):
             elif argument == 'on':
                 self.save_parametre("bot_available", True)
 
-    @staticmethod
-    def save_parametre(parametre, argument):
+    def save_parametre(self, parametre, argument):
         Parametres.update(**{parametre: argument}).execute()
+        self.settings = Parametres.get()
 
     @staticmethod
     def reset_friends():
@@ -519,7 +519,6 @@ class DongerBot(SingleServerIRCBot):
         if self.settings.friend_available_override is False:
             return
 
-        Pseudo.update()
         try:
             self.add_friend(self.settings.current_friend.pseudo)
         except Pseudo.DoesNotExist:
