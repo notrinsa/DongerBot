@@ -2,15 +2,18 @@
 # coding: utf-8
 
 __author__ = "rinsa"
-__version__ = "3.0"
-__date__ = "17/10/2017"
+__version__ = "1.0"
+__date__ = "12/07/2016"
 __copyright__ = "Copyright (c) rinsa"
 __license__ = "GPL2"
 
+from collections import OrderedDict
 from datetime import datetime
+from hashlib import md5
 from ircbot import SingleServerIRCBot
 from irclib import nm_to_n, nm_to_h
 import json
+import os
 import peewee
 from peewee import *
 import random
@@ -18,6 +21,7 @@ import re
 import string
 import sys
 import time
+from time import strftime, localtime
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -28,13 +32,18 @@ Server = "irc.redditairfrance.fr"
 Port = 6697
 ServerPass = None
 Channel = "#reddit-fr"
+# Channel = "#donger"
 Nick = "dong3r"
-NickPass = ""
+NickPass = "bot_password"
 AllowedHostnames = ["mclose.eu"]
+# MySQL
+database = MySQLDatabase('dbname', user='username', passwd='password')
+# SuperSecretCommand
+SuperSecretCommand = "coucougithub"
 
 # File Info
 Path = "/opt/bots/donger/"
-ActionsFile = Path + "liste_beta.json"
+ActionsFile = Path + "liste.json"
 
 # Constantes
 ARGS_NONE = 0
@@ -43,8 +52,8 @@ ARGS_TEXTE = 2
 ARGS_SPECIAL = 3
 INTERVALS = (
     ('semaines', 604800),  # 60 * 60 * 24 * 7
-    ('jours', 86400),  # 60 * 60 * 24
-    ('heures', 3600),  # 60 * 60
+    ('jours', 86400),    # 60 * 60 * 24
+    ('heures', 3600),    # 60 * 60
     ('minutes', 60),
     ('secondes', 1)
 )
@@ -52,9 +61,8 @@ INTERVALS = (
 
 class BaseModel(Model):
     """ Modèle de base """
-
     class Meta:
-        database = MySQLDatabase('donger', user='donger', passwd='donger')
+        database = database
 
 
 class Stats(BaseModel):
@@ -74,7 +82,8 @@ class Pseudo(BaseModel):
     """ Classe Pseudo """
     id = peewee.PrimaryKeyField()
     pseudo = peewee.CharField()
-    temps_ami = peewee.IntegerField()
+    normalized_nickname = peewee.CharField()
+    temps_ami = peewee.FloatField()
     nombre_messages = peewee.FloatField()
     nombre_commandes = peewee.FloatField()
     blacklist = peewee.BooleanField()
@@ -86,6 +95,7 @@ class Archives(BaseModel):
     pseudo = peewee.ForeignKeyField(Pseudo, related_name='pseudo_id')
     timestamp = peewee.DateTimeField(default=datetime.now)
     commande = peewee.ForeignKeyField(Commandes, related_name='commande_id')
+    texte = peewee.TextField()
 
 
 class Parametres(BaseModel):
@@ -126,119 +136,16 @@ class DongerBot(SingleServerIRCBot):
         print "Connecting to %s:%i..." % (server, port)
         print "Press Ctrl-C to quit"
 
-    def on_pubmsg(self, connection, infos):
+    def on_pubmsg(self, c, infos):
         """ Traitement des messages publics """
-        self.check_time()
-        self.current_channel = self.channels[infos.target()]
-        self.users = self.current_channel.users()
+
         message = infos.arguments()[0].rstrip()
 
-        # Récupère l'auteur
-        self.auteur = {
-            'fn': infos.source(),  # fullname  (rinsa!rinsa@mclose.eu)
-            'f': self.nm_to_fn(infos.source()),  # full      (rinsa@mclose.eu)
-            'm': nm_to_h(infos.source()),  # mask      (mclose.eu)
-            'n': nm_to_n(infos.source())  # nickname  (rinsa)
-        }
-
-        """ refresh actual friend """
-        self.refresh_friends()
+        # Traite Event
+        self.traite_event(infos)
 
         """ Traite le message """
-        self.traite_message()
-
-        # Partie Commande / Action
-        if message.startswith("!") and len(message) > 2:
-            # Refresh amis
-
-            # Jarte le "!"
-            message = message[1:]
-            # Récupère l'intitulé de la commande
-            commande = re.split('(\W)+', message, 1)[0]
-            # Dégage la commande du reste du message
-            reste = message[len(commande) + 1:] if len(message[len(commande) + 1:]) > 0 else None
-
-            """
-                Vérifications floods / disponibilités du bot hors admin
-                > Si le bot est disponible
-                > Si l'utilisateur n'est pas dans ceux blacklistés
-                > Si l'utilisateur n'a pas lancé de code avant la spam_limit
-            """
-            if self.auteur['m'] not in AllowedHostnames:
-                # Bot désactivé
-                if self.settings.bot_available is False:
-                    return
-                # Utilisateurs blacklistés
-                try:
-                    Pseudo.get(Pseudo.pseudo == self.auteur['n'], Pseudo.blacklist is True)
-                    return
-                except Pseudo.DoesNotExist:
-                    pass
-                if self.auteur['fn'] not in self.last_uses:
-                    # Rajout dans le filtre
-                    self.last_uses[self.auteur['fn']] = time.time()
-                else:
-                    if round(time.time() - self.last_uses[self.auteur['fn']]) < self.settings.spam_limit:
-                        return
-                    else:
-                        self.last_uses[self.auteur['fn']] = time.time()
-
-            # Chargement de la liste des actions
-            self.liste_actions = self.load_file()
-
-            envoi_message = None
-
-            """
-                dispatch principal
-            """
-            if commande.lower() in self.liste_actions:
-                envoi_message = self.ecrit_donger(self.liste_actions[commande.lower()], reste)
-
-            """
-                dispatch spécial, admin
-            """
-            if self.auteur['m'] in AllowedHostnames:
-                if commande.lower() in ["blacklist", "degage"]:
-                    # Partie blacklist / ignore_user(pseudo, true)
-                    self.ignore_user(reste, True)
-                if commande.lower() in ["unignore", "remove", "un"]:
-                    # Partie unignore / ignore_user(pseudo, false)
-                    self.ignore_user(reste, False)
-                if commande.lower() in ["setting", "set", "param", "parameter"]:
-                    # Partie Settings / set_param(param, arg)
-                    _message = re.split("(\W+)", reste)
-                    if len(_message) != 3:
-                        return
-                    parametre = _message[0]
-                    argument = _message[2]
-                    self.change_parametre(parametre, argument)
-                if commande.lower() in ["get"]:
-                    if getattr(self.settings, reste, None) is not None:
-                        envoi_message = "Paramètre " + reste + " : " + str(getattr(self.settings, reste))
-
-            """
-                dispatch spécial, not admin
-            """
-            if commande.lower() == "liste":
-                # Partie Liste / send_msg
-                envoi_message = "La liste des commandes est disponible sur www.redditairfrance.fr"
-
-            if commande.lower() == "random":
-                # Partie Random / get_random
-                envoi_message = self.ecrit_random(reste)
-
-            if commande.lower() == "stats":
-                # Partie Stats / get_stats
-                envoi_message = self.get_stats(reste)
-
-            if commande.lower() == "friends":
-                # Partie Friends / get_friends
-                envoi_message = self.get_friends(reste)
-
-            if envoi_message is not None:
-                self.send_pub_msg(connection, envoi_message if commande.islower() else envoi_message.upper())
-
-                self.traite_donger(commande.lower())
+        self.traite_message(c, message)
 
     def ecrit_random(self, reste):
         """ Gère le random yo """
@@ -288,6 +195,7 @@ class DongerBot(SingleServerIRCBot):
 
             if donger_commande == "!afol":
                 """ Commande AFOL """
+                reste = reste.decode("utf-8", "ignore")
                 collection = reste + 's' if reste[-1:] != 's' else reste
                 initiales = ""
                 for i in reste.upper().split():
@@ -297,13 +205,13 @@ class DongerBot(SingleServerIRCBot):
             if donger_commande == "!anniv":
                 """ Commande anniv """
                 if reste is None:
-                    return False
+                    return None
                 mots = reste.split(" ")
                 if len(mots) < 2:
-                    return False
+                    return None
                 message = donger_action.format(*[mots[0], mots[1]]) \
                     if mots[1].isdigit() and len(mots[1]) < 4 and len(mots[0]) < 30 \
-                    else False
+                    else None
 
             if donger_commande == "!who":
                 """ Commande who """
@@ -330,8 +238,10 @@ class DongerBot(SingleServerIRCBot):
                     return
                 if self.settings.friend_available is False:  # dispo !friend naturel
                     return
-                if (prev_friend is not None and self.auteur['n'] == self.settings.prev_friend.pseudo) \
-                        or (current_friend is not None and self.auteur['n'] == self.settings.current_friend.pseudo):
+                if (prev_friend is not None
+                    and self.auteur['n'].lower() == self.settings.prev_friend.normalized_nickname) \
+                        or (current_friend is not None
+                            and self.auteur['n'].lower() == self.settings.current_friend.normalized_nickname):
                     """ Si l'auteur est l'ami en cours ou l'ami précédent """
                     return
 
@@ -339,12 +249,16 @@ class DongerBot(SingleServerIRCBot):
                     message = "⭐️ {0} ⭐️ est mon 🥇 premier 🥇 ❤️ meilleur ami ❤️ de la 🌞 journée 🌞" \
                         .format(self.auteur['n'])
 
-                elif current_friend is not None and self.settings.current_friend.pseudo != self.auteur['n']:
+                elif current_friend is not None \
+                        and self.settings.current_friend.normalized_nickname != self.auteur['n'].lower():
                     message = donger_action.format(self.settings.current_friend.pseudo, self.auteur['n'])
                     self.save_parametre('prev_friend', current_friend)
 
                 """ ORM Ami """
-                auteur, created = Pseudo.get_or_create(pseudo=self.auteur['n'])
+                try:
+                    auteur = Pseudo.get(Pseudo.normalized_nickname == self.auteur['n'].lower())
+                except Pseudo.DoesNotExist:
+                    auteur = Pseudo.create(pseudo=self.auteur['n'], normalized_nickname=self.auteur['n'].lower())
                 self.save_parametre('current_friend', auteur)  # Changement de l'ami de donger
                 self.refresh_friends()
 
@@ -354,13 +268,16 @@ class DongerBot(SingleServerIRCBot):
                 reste = random.choice(self.users)
 
             if reste is not None:
-                message = donger_action.format(reste)
+                if donger['args'] == ARGS_PSEUDO and reste.lower() not in self.users:
+                    pass
+                else:
+                    message = donger_action.format(reste)
             else:
                 message = donger_action
 
         return message
 
-    def traite_donger(self, commande):
+    def traite_donger(self, commande, reste=None):
         """ Envoi le donger sur le chan et traitements annexes (logs, sql, friends, check_time ...) """
 
         """ ORM Ajout stats commandes """
@@ -370,18 +287,144 @@ class DongerBot(SingleServerIRCBot):
             stats.save()
 
         """ ORM Ajout archives """
-        user, created = Pseudo.get_or_create(pseudo=self.auteur['n'])
-        Archives.create(pseudo_id=user, commande=stats)
+        try:
+            user = Pseudo.get(Pseudo.normalized_nickname == self.auteur['n'].lower())
+        except Pseudo.DoesNotExist:
+            user = Pseudo.create(pseudo=self.auteur['n'], normalized_nickname=self.auteur['n'].lower())
+
+        Archives.create(pseudo_id=user, commande=stats, texte=reste)
         user.nombre_commandes = user.nombre_commandes + 1 if user.nombre_commandes is not None else 1
         user.save()
 
-    def traite_message(self):
+        self.ferme_connexion()
+
+    def traite_event(self, infos):
+        # refresh actual friend
+        self.refresh_friends()
+
+        # Récupère l'auteur
+        self.auteur = {
+            'fn': infos.source(),  # fullname  (rinsa!rinsa@mclose.eu)
+            'f': self.nm_to_fn(infos.source()),  # full      (rinsa@mclose.eu)
+            'm': nm_to_h(infos.source()),  # mask      (mclose.eu)
+            'n': nm_to_n(infos.source())  # nickname  (rinsa)
+        }
+
+        self.check_time()
+        self.current_channel = self.channels[Channel]
+        self.users = [pseudo.lower() for pseudo in self.current_channel.users()]
+
+    def traite_message(self, connection, message):
         """ Traite les messages (nombre messages) """
 
         """ ORM Maj Utilisateur """
-        user, created = Pseudo.get_or_create(pseudo=self.auteur['n'])
+        try:
+            user = Pseudo.get(Pseudo.normalized_nickname == self.auteur['n'].lower())
+        except Pseudo.DoesNotExist:
+            user = Pseudo.create(pseudo=self.auteur['n'], normalized_nickname=self.auteur['n'].lower())
         user.nombre_messages = user.nombre_messages + 1 if user.nombre_messages is not None else 1
         user.save()
+        self.ferme_connexion()
+
+        # Partie Commande / Action
+        if message.startswith("!") and len(message) > 2:
+            # Refresh amis
+
+            # Jarte le "!"
+            message = message[1:]
+            # Récupère l'intitulé de la commande
+            commande = re.split('(\W)+', message, 1)[0]
+            # Dégage la commande du reste du message
+            reste = message[len(commande) + 1:] if len(message[len(commande) + 1:]) > 0 else None
+
+            """
+                Vérifications floods / disponibilités du bot hors admin
+                > Si le bot est disponible
+                > Si l'utilisateur n'est pas dans ceux blacklistés
+                > Si l'utilisateur n'a pas lancé de code avant la spam_limit
+            """
+
+            if self.auteur['m'] not in AllowedHostnames:
+                # Bot désactivé
+                if self.settings.bot_available is False:
+                    return
+                # Utilisateurs blacklistés
+                try:
+                    Pseudo.get(Pseudo.normalized_nickname == self.auteur['n'].lower(), Pseudo.blacklist is True)
+                    return
+                except Pseudo.DoesNotExist:
+                    pass
+                if self.auteur['fn'] not in self.last_uses:
+                    # Rajout dans le filtre
+                    self.last_uses[self.auteur['fn']] = time.time()
+                else:
+                    if int(round(time.time() - self.last_uses[self.auteur['fn']])) < int(self.settings.spam_limit):
+                        return
+                    else:
+                        self.last_uses[self.auteur['fn']] = time.time()
+
+            # Chargement de la liste des actions
+            self.liste_actions = self.load_file()
+
+            envoi_message = None
+
+            """
+                dispatch principal
+            """
+            if commande.lower() in self.liste_actions:
+                envoi_message = self.ecrit_donger(self.liste_actions[commande.lower()], reste)
+
+            """
+                dispatch spécial, admin
+            """
+            if self.auteur['m'] in AllowedHostnames:
+                if commande.lower() in ["blacklist", "degage"]:
+                    # Partie blacklist / ignore_user(pseudo, true)
+                    self.ignore_user(reste, True)
+                if commande.lower() in ["unignore", "remove", "un"]:
+                    # Partie unignore / ignore_user(pseudo, false)
+                    self.ignore_user(reste, False)
+                if commande.lower() in ["setting", "set", "param", "parameter"]:
+                    # Partie Settings / set_param(param, arg)
+                    _message = re.split("(\W+)", reste)
+                    if len(_message) != 3:
+                        return
+                    parametre = _message[0]
+                    argument = _message[2]
+                    self.change_parametre(parametre, argument)
+                if commande.lower() in ["get"]:
+                    try:
+                        if getattr(self.settings, reste, None) is not None:
+                            envoi_message = "Paramètre " + reste + " : " + str(getattr(self.settings, reste))
+                    except Pseudo.DoesNotExist:
+                        envoi_message = "Pas de pseudo sélectionné"
+
+            """
+                dispatch spécial, not admin
+            """
+            if commande.lower() == "liste":
+                # Partie Liste / send_msg
+                envoi_message = "La liste des commandes est disponible sur www.redditairfrance.fr"
+
+            if commande.lower() == "random":
+                # Partie Random / get_random
+                envoi_message = self.ecrit_random(reste)
+
+            if commande.lower() == "stats":
+                # Partie Stats / get_stats
+                envoi_message = self.get_stats(reste)
+
+            if commande.lower() == "friends":
+                # Partie Friends / get_friends
+                envoi_message = self.get_friends(reste)
+
+            if commande.lower() == SuperSecretCommand:
+                # Partie commande secrete
+                envoi_message = reste
+
+            if envoi_message is not None:
+                self.send_pub_msg(connection, envoi_message if commande.islower() else envoi_message.upper())
+                self.traite_donger(commande.lower(), reste)
 
     def change_parametre(self, parametre, argument):
         """ Change les paramètres """
@@ -414,16 +457,17 @@ class DongerBot(SingleServerIRCBot):
     def save_parametre(self, parametre, argument):
         setattr(self.settings, parametre, argument)
         self.settings.save()
+        self.ferme_connexion()
 
-    @staticmethod
-    def reset_friends():
+    def reset_friends(self):
         """ Reset les amis """
 
         query = Pseudo.update(temps_ami=0)
         query.execute()
 
-    @staticmethod
-    def get_stats(commande):
+        self.ferme_connexion()
+
+    def get_stats(self, commande):
         """ Récupère les stats d'une commande """
 
         if commande is not None:
@@ -441,7 +485,13 @@ class DongerBot(SingleServerIRCBot):
             for commandes in Stats.select().order_by(Stats.nombre.desc()).limit(5):
                 sendmsg += commandes.commande + " : " + str(commandes.nombre) + " fois    "
 
+        self.ferme_connexion()
+
         return sendmsg
+
+    @staticmethod
+    def ferme_connexion():
+        database.close()
 
     def get_friends(self, friend=None):
         """ Récupération des stats des amis """
@@ -450,7 +500,7 @@ class DongerBot(SingleServerIRCBot):
 
             """ ORM Récup friend """
             try:
-                ami = Pseudo.get(Pseudo.pseudo == friend)
+                ami = Pseudo.get(Pseudo.normalized_nickname == friend.lower())
                 sendmsg = friend + " a été le meilleur ami de donger pendant " + str(self.display_time(ami.temps_ami))
             except Pseudo.DoesNotExist:
                 sendmsg = friend + " n'a jamais été le meilleur ami de donger :("
@@ -460,7 +510,7 @@ class DongerBot(SingleServerIRCBot):
             """ ORM Récup top friends """
             sendmsg = "Les 5 meilleurs amis de donger : "
             for ami in Pseudo.select().order_by(Pseudo.temps_ami.desc()).limit(5):
-                sendmsg += ami.pseudo + " pendant " + str(self.display_time(ami.temps_ami)) + "; "
+                sendmsg += ami.pseudo + " pendant " + self.display_time(ami.temps_ami) + "; "
             sendmsg = sendmsg[:-2]
 
         return sendmsg
@@ -491,13 +541,16 @@ class DongerBot(SingleServerIRCBot):
             self.save_parametre("prev_friend", None)
             self.save_parametre("current_friend", None)
 
-    @staticmethod
-    def ignore_user(user, remove):
+    def ignore_user(self, user, remove):
         """ Ignore un utilisateur """
+        try:
+            pseudo = Pseudo.get(Pseudo.normalized_nickname == user.lower())
+        except Pseudo.DoesNotExist:
+            pseudo = Pseudo.create(pseudo=user, normalized_nickname=user.lower())
 
-        pseudo, created = Pseudo.get_or_create(pseudo=user)
         pseudo.blacklist = remove
         pseudo.save()
+        self.ferme_connexion()
 
     def refresh_friends(self):
         """ Rafraichit le temps de l'ami actuel """
@@ -507,11 +560,15 @@ class DongerBot(SingleServerIRCBot):
 
         if self.settings.friend_available is True:
             """ ORM Get User"""
-            ami = Pseudo.get(Pseudo.id == self.settings.current_friend)
-            ami.temps_ami += round(time.time() - self.current_friend_time)
-            ami.save()
+            try:
+                ami = Pseudo.get(Pseudo.id == self.settings.current_friend)
+                ami.temps_ami += round(time.time() - self.current_friend_time)
+                ami.save()
+                self.ferme_connexion()
+                self.current_friend_time = time.time()
 
-            self.current_friend_time = time.time()
+            except Pseudo.DoesNotExist:
+                pass
 
     @staticmethod
     def load_file():
@@ -558,8 +615,12 @@ class DongerBot(SingleServerIRCBot):
     def on_nicknameinuse(c, e):
         c.nick(c.get_nickname() + "_")
 
-    def on_privmsg(self, connection, infos):
-        pass
+    def on_privmsg(self, c, infos):
+        message = infos.arguments()[0].rstrip()
+        # Traite Event
+        self.traite_event(infos)
+        # Traite Message
+        self.traite_message(c, message)
 
 
 def main():

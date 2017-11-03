@@ -44,6 +44,10 @@
       "args": 1,
       "caps": false
     },
+    "javascript": {
+      "action": "(╬ఠ༬ఠ)୨   Râ, fais pas chier avec ton java pourri. C'est pas du javascript parce que c'est pas compilé c'est ça ? Bon ok, je me suis gouré.    ୧(ఠ༬ఠ╬)",
+      "commande": "!javascript"
+    },
     "kek": {
       "action": "LOL xD {0} xD LOL",
       "commande": "!kek",
@@ -121,6 +125,10 @@
       "args": 1,
       "caps": false
     },
+    "victoria": {
+      "action": "ԅ། ຈ ◞౪◟ຈ །و Tu vas m'envoyer quoi en privé ? Une photo d'un développeur UNIX qui fait de la muscu avec une victoria secret qui lui pompe la bite pendant qu'il trade de la crypto monnaie ? ԅ། ຈ ◞౪◟ຈ །و ",
+      "commande": "!victoria"
+    },
     "cuni": {
       "action": "٩(◕‿◕｡)۶ quand la nana est en open relationship, faut bien comprendre qu'à chaque fois que tu lui fais un cuni, si ça se trouve yavait la bite de son mec dedans 3h avant ٩(◕‿◕｡)۶",
       "commande": "!cuni"
@@ -143,6 +151,10 @@
     }
   },
   "Dongers": {
+    "prod": {
+      "action": "™ 乂❤‿❤乂 𝕝𝕖𝕤 𝕖𝕟𝕗𝕒𝕟𝕥𝕤, 𝕧𝕠𝕦𝕤 𝕒𝕧𝕖𝕫 𝕡𝕒𝕤 𝕓𝕖𝕤𝕠𝕚𝕟 𝕕𝕖 𝕡𝕣𝕠𝕕𝕤 𝕡𝕠𝕦𝕣 𝕧𝕠𝕦𝕤 𝕒𝕞𝕦𝕤𝕖𝕣 乂❤‿❤乂 ™",
+      "commande": "!prod"
+    },
     "okc": {
       "action": "(́ง◉◞౪◟◉‵)ง JE SUIS {0} JE CREEPE SUR OKC (́ง◉◞౪◟◉‵)ง",
       "commande": "!okc",
@@ -153,6 +165,14 @@
     "molly": {
       "action": "༼つ ◕_◕ ༽つ GIVE ME MOLLY ༼つ ◕_◕ ༽つ",
       "commande": "!molly"
+    },
+    "hypetrain": {
+      "action": " ᕕ( ՞ ᗜ ՞ )ᕗᕕ( ՞ ᗜ ՞ )ᕗ ALL ABOARD THE HYPE TRAIN ✿*∗˵╰༼✪ᗜ✪༽╯˵∗*✿",
+      "commande": "!hypetrain"
+    },
+    "hype": {
+      "action": " ᕕ( ՞ ᗜ ՞ )ᕗ HYPE (๑’ᗢ’๑)ฅ HYPE ✿*∗˵╰༼✪ᗜ✪༽╯˵∗*✿ HYPE ∠( ᐛ 」∠)＿ HYPE ᕕ( ᐛ )ᕗ HYPE (゜▼゜＊）HYPE ♪♪ｖ(⌒ｏ⌒)ｖ♪♪",
+      "commande": "!hype"
     },
     "coco": {
       "action": "ʕ ᓀ ᴥ ᓂ ʔ I FUCKING LOVE COCAINE ʕ ᓀ ᴥ ᓂ ʔ",
@@ -185,8 +205,11 @@
       "commande": "!france"
     },
     "raison": {
-      "action": "┌༼▀̿ Ĺ̯▀̿༽┐ On a pas besoin de raison quand on a les dongers ༼▀̿ Ĺ̯▀̿༽┐",
-      "commande": "!raison"
+      "action": "┌༼▀̿ Ĺ̯▀̿༽┐ On a pas besoin de {0} quand on a les dongers ༼▀̿ Ĺ̯▀̿༽┐",
+      "commande": "!raison",
+      "args": 1,
+      "caps": false,
+      "default": "raison"
     },
     "dong": {
       "action": "₍₍ ᕕ( ･᷄ὢ･᷅ )ᕗ⁾⁾ಠ╭╮ಠ☆╭( ･ㅂ･)و ̑̑(－‸ლ)✿♥‿♥(ﾉ> ◇ <)ﾉ♬♪♫♩(⊙ヮ⊙)(づ￣ ³￣)づo(≧∇≦o)Ｏ(≧∇≦)Ｏ≧(´▽｀)≦(͠≖ ͜ʖ͠≖)¿ⓧⓧﮌ╭∩╮( ͡⚆ ͜ʖ ͡⚆)╭∩╮┌∩┐(◣_◢)┌∩┐(ノಠ益ಠ)ノ彡┻━┻( ° ͜ʖ͡°)╭∩╮̿̿ ̿̿ ̿̿ ̿'̿'\\̵͇̿̿\\з=( ͡° ͜ʖ ͡°)=ε/̵͇̿̿/’̿’̿ ¯\\(ツ)_/¯",
@@ -416,6 +439,10 @@
       "commande": "!flair",
       "args": 1,
       "caps": false
+    },
+    "melenchiasse": {
+      "action": "┌༼ ˘ 益 ˘ ༽┐ Personnellement, grand bien te fasse que tu sois développeur obèse avec des cheveux gras complètement puceau à écouter du métal avec le discours mélenchiasse en fond sur ton foobar de merde pour finir par te branler sur hentai sur ton vlc android xioami j'en ai rien à foutre. ┌༼ ˘ 益 ˘ ༽┐",
+      "commande": "!foobar"
     },
     "rotule": {
       "action": "୧( ͡ᵔ 益 ͡ᵔ )୨ Autant je suis très très sympa, on peut rigoler de moi, de mon mec, de mon fils ԅ( ◔益◔ )ᕗ mais mec je te le dis qu'une seule fois. Dis encore une fois que mon {0} est con, et je trouve ton adresse pour te péter les deux rotules. ┌( ◕ 益 ◕ )ᓄ",
