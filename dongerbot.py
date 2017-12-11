@@ -7,13 +7,13 @@ __date__ = "12/07/2016"
 __copyright__ = "Copyright (c) rinsa"
 __license__ = "GPL2"
 
-from collections import OrderedDict
+import cgi
 from datetime import datetime
-from hashlib import md5
+from bs4 import BeautifulSoup
+from elasticsearch import Elasticsearch
 from ircbot import SingleServerIRCBot
 from irclib import nm_to_n, nm_to_h
 import json
-import os
 import peewee
 from peewee import *
 import random
@@ -21,29 +21,31 @@ import re
 import string
 import sys
 import time
-from time import strftime, localtime
+import urllib2
 
 reload(sys)
 sys.setdefaultencoding('utf8')
 
 # Server, Port, ServerPass, Channel, Nick, NickPass
 # IRC Server Configuration
-Server = "irc.redditairfrance.fr"
-Port = 6697
-ServerPass = None
-Channel = "#reddit-fr"
-# Channel = "#donger"
-Nick = "dong3r"
-NickPass = "bot_password"
-AllowedHostnames = ["mclose.eu"]
+SERVER_ADDRESS = "irc.redditairfrance.fr"
+PORT = 6697
+SERVER_PASSWORD = None
+CHANNEL = "#reddit-fr"
+# CHANNEL = "#donger"
+NICKNAME = "donger"
+PASSWORD = "frenchguyez"
+ALLOWED_HOSTNAMES = ["mclose.eu"]
 # MySQL
-database = MySQLDatabase('dbname', user='username', passwd='password')
-# SuperSecretCommand
-SuperSecretCommand = "coucougithub"
+DATABASE = MySQLDatabase('db_name', user='', passwd='')
+# SUPER_SECRET_COMMAND
+SUPER_SECRET_COMMAND = ""
 
 # File Info
-Path = "/opt/bots/donger/"
-ActionsFile = Path + "liste.json"
+PATH = "/opt/bots/donger/"
+ACTIONS_FILE = PATH + "liste.json"
+
+STOPWORDS_FILE = 'stopwords-fr.txt'
 
 # Constantes
 ARGS_NONE = 0
@@ -62,7 +64,7 @@ INTERVALS = (
 class BaseModel(Model):
     """ Modèle de base """
     class Meta:
-        database = database
+        database = DATABASE
 
 
 class Stats(BaseModel):
@@ -117,11 +119,13 @@ class DongerBot(SingleServerIRCBot):
                                     nick,
                                     nick, True)
 
-        self.chans = Channel
+        self.chans = CHANNEL
         self.nick_pass = nick_pass
 
         self.users = []
-        self.current_channel = Channel
+        self.current_channel = CHANNEL
+
+        self.stopwords = self.load_stopwords()
 
         self.last_uses = {}
         self.current_friend_time = time.time()
@@ -136,16 +140,49 @@ class DongerBot(SingleServerIRCBot):
         print "Connecting to %s:%i..." % (server, port)
         print "Press Ctrl-C to quit"
 
-    def on_pubmsg(self, c, infos):
-        """ Traitement des messages publics """
+    def change_parametre(self, parametre, argument):
+        """ Change les paramètres """
 
-        message = infos.arguments()[0].rstrip()
+        if parametre in ['spamlimit', 'spam_limit', 'spam']:
 
-        # Traite Event
-        self.traite_event(infos)
+            # Limite Spam
+            if isinstance(int(argument), (int, long)):
+                self.save_parametre("spam_limit", argument)
 
-        """ Traite le message """
-        self.traite_message(c, message)
+        elif parametre in ['dredi']:
+            # Limite Spam
+            self.save_parametre("spam_limit", "0")
+
+        elif parametre in ['friends', 'friends_available', 'friend_available', 'friend', 'friend_override']:
+
+            # Amis
+            if argument in ['true', '1', 'True']:
+                self.save_parametre("friend_available_override", True)
+            elif argument in ['false', '0', 'False']:
+                self.save_parametre("friend_available_override", False)
+                self.save_parametre("current_friend", None)
+            elif argument == 'reset':
+                self.reset_friends()
+
+        elif parametre in ['donger', 'bot']:
+
+            # Interrupteur
+            if argument == 'off':
+                self.save_parametre("bot_available", False)
+            elif argument == 'on':
+                self.save_parametre("bot_available", True)
+
+    def check_time(self):
+        """ Regarde l'heure et démarre le !friend ou non """
+
+        if self.settings.friend_available_override is False:
+            return
+        if 9 > int(time.strftime("%H")) >= 0 and self.settings.friend_available is True:
+            self.save_parametre("friend_available", False)
+        elif int(time.strftime("%H")) >= 9 and self.settings.friend_available is False:
+            self.save_parametre("friend_available", True)
+            self.save_parametre("prev_friend", None)
+            self.save_parametre("current_friend", None)
 
     def ecrit_random(self, reste):
         """ Gère le random yo """
@@ -268,7 +305,7 @@ class DongerBot(SingleServerIRCBot):
                 reste = random.choice(self.users)
 
             if reste is not None:
-                if donger['args'] == ARGS_PSEUDO and reste.lower() not in self.users:
+                if donger['args'] == ARGS_PSEUDO and reste.lower() not in self.users and reste != donger['default']:
                     pass
                 else:
                     message = donger_action.format(reste)
@@ -277,44 +314,126 @@ class DongerBot(SingleServerIRCBot):
 
         return message
 
-    def traite_donger(self, commande, reste=None):
-        """ Envoi le donger sur le chan et traitements annexes (logs, sql, friends, check_time ...) """
+    def get_friends(self, friend=None):
+        """ Récupération des stats des amis """
 
-        """ ORM Ajout stats commandes """
-        stats, created = Stats.get_or_create(commande=commande, defaults={'nombre': 1})
-        if created is False:
-            stats.nombre += 1
-            stats.save()
+        if friend is not None:
 
-        """ ORM Ajout archives """
-        try:
-            user = Pseudo.get(Pseudo.normalized_nickname == self.auteur['n'].lower())
-        except Pseudo.DoesNotExist:
-            user = Pseudo.create(pseudo=self.auteur['n'], normalized_nickname=self.auteur['n'].lower())
+            """ ORM Récup friend """
+            try:
+                ami = Pseudo.get(Pseudo.normalized_nickname == friend.lower())
+                sendmsg = friend + " a été le meilleur ami de donger pendant " + str(self.display_time(ami.temps_ami))
+            except Pseudo.DoesNotExist:
+                sendmsg = friend + " n'a jamais été le meilleur ami de donger :("
 
-        Archives.create(pseudo_id=user, commande=stats, texte=reste)
-        user.nombre_commandes = user.nombre_commandes + 1 if user.nombre_commandes is not None else 1
-        user.save()
+        else:
+
+            """ ORM Récup top friends """
+            sendmsg = "Les 5 meilleurs amis de donger : "
+            for ami in Pseudo.select().order_by(Pseudo.temps_ami.desc()).limit(5):
+                sendmsg += ami.pseudo + " pendant " + self.display_time(ami.temps_ami) + "; "
+            sendmsg = sendmsg[:-2]
+
+        return sendmsg
+
+    def get_stats(self, commande):
+        """ Récupère les stats d'une commande """
+
+        if commande is not None:
+
+            """ ORM Récup stats commande """
+            _commande, created = Stats.get_or_create(commande=commande)
+            sendmsg = "Stats pour la commande " + commande + " : envoyée " + str(_commande.nombre) + " fois" \
+                if created is False \
+                else "Pas de stats pour la commande " + commande + "."
+
+        else:
+
+            """ ORM Récup top stats """
+            sendmsg = "5 commandes les plus utilisées :  "
+            for commandes in Stats.select().order_by(Stats.nombre.desc()).limit(5):
+                sendmsg += commandes.commande + " : " + str(commandes.nombre) + " fois    "
 
         self.ferme_connexion()
 
-    def traite_event(self, infos):
-        # refresh actual friend
-        self.refresh_friends()
+        return sendmsg
 
-        # Récupère l'auteur
-        self.auteur = {
-            'fn': infos.source(),  # fullname  (rinsa!rinsa@mclose.eu)
-            'f': self.nm_to_fn(infos.source()),  # full      (rinsa@mclose.eu)
-            'm': nm_to_h(infos.source()),  # mask      (mclose.eu)
-            'n': nm_to_n(infos.source())  # nickname  (rinsa)
-        }
+    def ignore_user(self, user, remove):
+        """ Ignore un utilisateur """
+        try:
+            pseudo = Pseudo.get(Pseudo.normalized_nickname == user.lower())
+        except Pseudo.DoesNotExist:
+            pseudo = Pseudo.create(pseudo=user, normalized_nickname=user.lower())
 
-        self.check_time()
-        self.current_channel = self.channels[Channel]
-        self.users = [pseudo.lower() for pseudo in self.current_channel.users()]
+        pseudo.blacklist = remove
+        pseudo.save()
+        self.ferme_connexion()
 
-    def traite_message(self, connection, message):
+    def on_privmsg(self, c, infos):
+        message = infos.arguments()[0].rstrip()
+        # Traite Event
+        self.traite_event(infos)
+        # Traite Message
+        self.traite_message(c, message, infos)
+
+        """ Log """
+        self.write_log("privmsg", infos)
+
+    def on_pubmsg(self, c, infos):
+        """ Traitement des messages publics """
+
+        message = infos.arguments()[0].rstrip()
+
+        """ Traite Event """
+        self.traite_event(infos)
+
+        """ Traite le message """
+        self.traite_message(c, message, infos)
+
+    def on_welcome(self, c, e):
+        """Join channels after successful connection"""
+        if self.nick_pass:
+            c.privmsg("nickserv", "identify %s" % self.nick_pass)
+            c.join(self.chans)
+
+    def quit(self):
+        self.connection.disconnect("ヽ༼ຈل͜ຈ༽ﾉ ")
+
+    def refresh_friends(self):
+        """ Rafraichit le temps de l'ami actuel """
+
+        if self.settings.friend_available_override is False:
+            return
+
+        if self.settings.friend_available is True:
+            """ ORM Get User"""
+            try:
+                ami = Pseudo.get(Pseudo.id == self.settings.current_friend)
+                ami.temps_ami += round(time.time() - self.current_friend_time)
+                ami.save()
+                self.ferme_connexion()
+                self.current_friend_time = time.time()
+
+            except Pseudo.DoesNotExist:
+                pass
+
+    def reset_friends(self):
+        """ Reset les amis """
+
+        query = Pseudo.update(temps_ami=0)
+        query.execute()
+
+        self.ferme_connexion()
+
+    def save_parametre(self, parametre, argument):
+        setattr(self.settings, parametre, argument)
+        self.settings.save()
+        self.ferme_connexion()
+
+    def send_pub_msg(self, connection, message):
+        [connection.privmsg(self.chans, msg) for msg in message.splitlines()]
+
+    def traite_message(self, connection, message, infos):
         """ Traite les messages (nombre messages) """
 
         """ ORM Maj Utilisateur """
@@ -328,8 +447,6 @@ class DongerBot(SingleServerIRCBot):
 
         # Partie Commande / Action
         if message.startswith("!") and len(message) > 2:
-            # Refresh amis
-
             # Jarte le "!"
             message = message[1:]
             # Récupère l'intitulé de la commande
@@ -344,7 +461,7 @@ class DongerBot(SingleServerIRCBot):
                 > Si l'utilisateur n'a pas lancé de code avant la spam_limit
             """
 
-            if self.auteur['m'] not in AllowedHostnames:
+            if self.auteur['m'] not in ALLOWED_HOSTNAMES:
                 # Bot désactivé
                 if self.settings.bot_available is False:
                     return
@@ -377,7 +494,7 @@ class DongerBot(SingleServerIRCBot):
             """
                 dispatch spécial, admin
             """
-            if self.auteur['m'] in AllowedHostnames:
+            if self.auteur['m'] in ALLOWED_HOSTNAMES:
                 if commande.lower() in ["blacklist", "degage"]:
                     # Partie blacklist / ignore_user(pseudo, true)
                     self.ignore_user(reste, True)
@@ -418,7 +535,7 @@ class DongerBot(SingleServerIRCBot):
                 # Partie Friends / get_friends
                 envoi_message = self.get_friends(reste)
 
-            if commande.lower() == SuperSecretCommand:
+            if commande.lower() == SUPER_SECRET_COMMAND:
                 # Partie commande secrete
                 envoi_message = reste
 
@@ -426,94 +543,57 @@ class DongerBot(SingleServerIRCBot):
                 self.send_pub_msg(connection, envoi_message if commande.islower() else envoi_message.upper())
                 self.traite_donger(commande.lower(), reste)
 
-    def change_parametre(self, parametre, argument):
-        """ Change les paramètres """
+        elif message.startswith(".") and len(message) > 2:
+            # Jarte le "!"
+            message = message[1:]
+            # Récupère l'intitulé de la commande
+            commande = re.split('(\W)+', message, 1)[0]
+            # Dégage la commande du reste du message
+            reste = message[len(commande) + 1:] if len(message[len(commande) + 1:]) > 0 else None
 
-        if parametre == 'spamlimit':
-
-            # Limite Spam
-            if isinstance(int(argument), (int, long)):
-                self.save_parametre("spam_limit", argument)
-
-        elif parametre == 'friends':
-
-            # Amis
-            if argument in ['true', '1', 'True']:
-                self.save_parametre("friend_available_override", True)
-            elif argument in ['false', '0', 'False']:
-                self.save_parametre("friend_available_override", False)
-                self.save_parametre("current_friend", None)
-            elif argument == 'reset':
-                self.reset_friends()
-
-        elif parametre == 'donger':
-
-            # Interrupteur
-            if argument == 'off':
-                self.save_parametre("bot_available", False)
-            elif argument == 'on':
-                self.save_parametre("bot_available", True)
-
-    def save_parametre(self, parametre, argument):
-        setattr(self.settings, parametre, argument)
-        self.settings.save()
-        self.ferme_connexion()
-
-    def reset_friends(self):
-        """ Reset les amis """
-
-        query = Pseudo.update(temps_ami=0)
-        query.execute()
-
-        self.ferme_connexion()
-
-    def get_stats(self, commande):
-        """ Récupère les stats d'une commande """
-
-        if commande is not None:
-
-            """ ORM Récup stats commande """
-            _commande, created = Stats.get_or_create(commande=commande)
-            sendmsg = "Stats pour la commande " + commande + " : envoyée " + str(_commande.nombre) + " fois" \
-                if created is False \
-                else "Pas de stats pour la commande " + commande + "."
+            envoi_message = self.traite_service(commande, reste)
+            self.send_pub_msg(connection, envoi_message)
 
         else:
+            """ Log message """
+            self.write_log("pubmsg", infos)
 
-            """ ORM Récup top stats """
-            sendmsg = "5 commandes les plus utilisées :  "
-            for commandes in Stats.select().order_by(Stats.nombre.desc()).limit(5):
-                sendmsg += commandes.commande + " : " + str(commandes.nombre) + " fois    "
+    def traite_donger(self, commande, reste=None):
+        """ Envoi le donger sur le chan et traitements annexes (logs, sql, friends, check_time ...) """
+
+        """ ORM Ajout stats commandes """
+        stats, created = Stats.get_or_create(commande=commande, defaults={'nombre': 1})
+        if created is False:
+            stats.nombre += 1
+            stats.save()
+
+        """ ORM Ajout archives """
+        try:
+            user = Pseudo.get(Pseudo.normalized_nickname == self.auteur['n'].lower())
+        except Pseudo.DoesNotExist:
+            user = Pseudo.create(pseudo=self.auteur['n'], normalized_nickname=self.auteur['n'].lower())
+
+        Archives.create(pseudo_id=user, commande=stats, texte=reste)
+        user.nombre_commandes = user.nombre_commandes + 1 if user.nombre_commandes is not None else 1
+        user.save()
 
         self.ferme_connexion()
 
-        return sendmsg
+    def traite_event(self, infos):
+        # refresh actual friend
+        self.refresh_friends()
 
-    @staticmethod
-    def ferme_connexion():
-        database.close()
+        # Récupère l'auteur
+        self.auteur = {
+            'fn': infos.source(),  # fullname  (rinsa!rinsa@mclose.eu)
+            'f': self.nm_to_fn(infos.source()),  # full      (rinsa@mclose.eu)
+            'm': nm_to_h(infos.source()),  # mask      (mclose.eu)
+            'n': nm_to_n(infos.source())  # nickname  (rinsa)
+        }
 
-    def get_friends(self, friend=None):
-        """ Récupération des stats des amis """
-
-        if friend is not None:
-
-            """ ORM Récup friend """
-            try:
-                ami = Pseudo.get(Pseudo.normalized_nickname == friend.lower())
-                sendmsg = friend + " a été le meilleur ami de donger pendant " + str(self.display_time(ami.temps_ami))
-            except Pseudo.DoesNotExist:
-                sendmsg = friend + " n'a jamais été le meilleur ami de donger :("
-
-        else:
-
-            """ ORM Récup top friends """
-            sendmsg = "Les 5 meilleurs amis de donger : "
-            for ami in Pseudo.select().order_by(Pseudo.temps_ami.desc()).limit(5):
-                sendmsg += ami.pseudo + " pendant " + self.display_time(ami.temps_ami) + "; "
-            sendmsg = sendmsg[:-2]
-
-        return sendmsg
+        self.check_time()
+        self.current_channel = self.channels[CHANNEL]
+        self.users = [pseudo.lower() for pseudo in self.current_channel.users()]
 
     @staticmethod
     def display_time(seconds, granularity=5):
@@ -529,55 +609,23 @@ class DongerBot(SingleServerIRCBot):
                 result.append("{} {}".format(str(value)[:-2], name))
         return ', '.join(result[:granularity])
 
-    def check_time(self):
-        """ Regarde l'heure et démarre le !friend ou non """
+    @staticmethod
+    def ferme_connexion():
+        DATABASE.close()
 
-        if self.settings.friend_available_override is False:
-            return
-        if 9 > int(time.strftime("%H")) >= 0 and self.settings.friend_available is True:
-            self.save_parametre("friend_available", False)
-        elif int(time.strftime("%H")) >= 9 and self.settings.friend_available is False:
-            self.save_parametre("friend_available", True)
-            self.save_parametre("prev_friend", None)
-            self.save_parametre("current_friend", None)
-
-    def ignore_user(self, user, remove):
-        """ Ignore un utilisateur """
-        try:
-            pseudo = Pseudo.get(Pseudo.normalized_nickname == user.lower())
-        except Pseudo.DoesNotExist:
-            pseudo = Pseudo.create(pseudo=user, normalized_nickname=user.lower())
-
-        pseudo.blacklist = remove
-        pseudo.save()
-        self.ferme_connexion()
-
-    def refresh_friends(self):
-        """ Rafraichit le temps de l'ami actuel """
-
-        if self.settings.friend_available_override is False:
-            return
-
-        if self.settings.friend_available is True:
-            """ ORM Get User"""
-            try:
-                ami = Pseudo.get(Pseudo.id == self.settings.current_friend)
-                ami.temps_ami += round(time.time() - self.current_friend_time)
-                ami.save()
-                self.ferme_connexion()
-                self.current_friend_time = time.time()
-
-            except Pseudo.DoesNotExist:
-                pass
+    @staticmethod
+    def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
+        return ''.join(random.choice(chars) for _ in range(size))
 
     @staticmethod
     def load_file():
         """ Récupère le fichier des actions """
-        with open(ActionsFile) as data_file:
+        with open(ACTIONS_FILE) as data_file:
             actions = json.load(data_file)
         full_list = {}
         # On aplatit le fichier JSON en enlevant les catégories
         for key in actions:
+
             for dkey in actions[key]:
                 donger = {
                     'action': actions[key][dkey]['action'],
@@ -586,46 +634,107 @@ class DongerBot(SingleServerIRCBot):
                     'caps': actions[key][dkey]['caps'] if 'caps' in actions[key][dkey] else None,
                     'default': actions[key][dkey]['default'] if 'default' in actions[key][dkey] else None
                 }
+
                 full_list[actions[key][dkey]['commande'][1:]] = donger
+
         return full_list
+
+    @staticmethod
+    def load_stopwords():
+        """ Récupère les mots non importants """
+        with open(STOPWORDS_FILE) as data_file:
+            return data_file.read().split()
 
     @staticmethod
     def nm_to_fn(auteur):
         return auteur.split("!")[1]
 
     @staticmethod
-    def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
-        return ''.join(random.choice(chars) for _ in range(size))
+    def traite_service(commande, reste):
+        """ Permet la récupération de la balise <title /> pour certaines pages comme YT, Spotify ... """
 
-    """ Envoie un message dans le chan """
+        message = None
 
-    def send_pub_msg(self, connection, message):
-        connection.privmsg(self.chans, message)
+        # Spotify
+        if commande == "spotify" and reste is not None:
+            track_id = re.sub(r'^spotify:|https://[a-z]+\.spotify\.com/track/', '', reste)
+            try:
+                req = urllib2.Request('https://open.spotify.com/track/' + track_id)
+                req.add_header('Range', 'bytes={}-{}'.format(0, 99))
+                f = urllib2.urlopen(req)
+                soup = BeautifulSoup(f.read(), 'html.parser')
+                message = "Track Spotify: {0} https://open.spotify.com/track/{1}".format(soup.title.string, track_id)
+            except urllib2.URLError as e:
+                message = e.message.decode("utf8", 'ignore')
 
-    def quit(self):
-        self.connection.disconnect("ヽ༼ຈل͜ຈ༽ﾉ ")
-
-    def on_welcome(self, c, e):
-        """Join channels after successful connection"""
-        if self.nick_pass:
-            c.privmsg("nickserv", "identify %s" % self.nick_pass)
-            c.join(self.chans)
+        return message
 
     @staticmethod
     def on_nicknameinuse(c, e):
         c.nick(c.get_nickname() + "_")
 
-    def on_privmsg(self, c, infos):
-        message = infos.arguments()[0].rstrip()
-        # Traite Event
-        self.traite_event(infos)
-        # Traite Message
-        self.traite_message(c, message)
+    def write_log(self, action, event):
+        timestamp = time.time()*1000
+        sender = nm_to_n(event.source())
+        channel = event.target()
+        content = cgi.escape(event.arguments()[0]) if len(event.arguments()) > 0 else None
+
+        info_content = None
+        if action is 'pubmsg':
+            phrase = content.lower()
+            words = phrase.split()
+            important_words = []
+
+            for word in words:
+                word = word.strip(string.punctuation)
+                if word not in self.stopwords and len(word) > 0:
+                    important_words.append(word.decode('utf-8', 'ignore'))
+
+            info_content = {
+                'content': content,
+                'raw': important_words
+            }
+
+        message = {
+            'date': timestamp,
+            'action': action,
+            'nickname': {
+                "original": sender,
+                "normalized": sender.lower()
+            },
+            'channel': channel,
+            'info_message': info_content
+        }
+
+        es = Elasticsearch()
+        es.index(index="messages", doc_type="message", body=message)
+        es.indices.refresh(index="messages")
+
+    def on_action(self, c, e):
+        self.write_log("action", e)
+
+    def on_join(self, c, e):
+        self.write_log("join", e)
+
+    def on_kick(self, c, e):
+        self.write_log("kick", e)
+
+    def on_mode(self, c, e):
+        self.write_log("mode", e)
+
+    def on_part(self, c, e):
+        self.write_log("part", e)
+
+    def on_pubnotice(self, c, e):
+        self.write_log("pubnotice", e)
+
+    def on_quit(self, c, e):
+        self.write_log("quit", e)
 
 
 def main():
     # Start the bot
-    bot = DongerBot(Server, Port, ServerPass, Nick, NickPass)
+    bot = DongerBot(SERVER_ADDRESS, PORT, SERVER_PASSWORD, NICKNAME, PASSWORD)
     try:
         bot.start()
     except KeyboardInterrupt:
