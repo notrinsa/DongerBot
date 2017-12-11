@@ -657,7 +657,7 @@ class DongerBot(SingleServerIRCBot):
 
         # Spotify
         if commande == "spotify" and reste is not None:
-            track_id = re.sub(r'^spotify:|https://[a-z]+\.spotify\.com/track/', '', reste)
+            track_id = re.sub(r'^spotify:|https://[a-z]+\.spotify\.com/track/', '', reste.split()[0])
             try:
                 req = urllib2.Request('https://open.spotify.com/track/' + track_id)
                 req.add_header('Range', 'bytes={}-{}'.format(0, 99))
