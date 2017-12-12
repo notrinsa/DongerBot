@@ -431,7 +431,8 @@ class DongerBot(SingleServerIRCBot):
         self.ferme_connexion()
 
     def send_pub_msg(self, connection, message):
-        [connection.privmsg(self.chans, msg) for msg in message.splitlines()]
+        if message is not None:
+            [connection.privmsg(self.chans, msg) for msg in message.splitlines()]
 
     def traite_message(self, connection, message, infos):
         """ Traite les messages (nombre messages) """
