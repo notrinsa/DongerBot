@@ -34,7 +34,7 @@ SERVER_PASSWORD = None
 CHANNEL = "#reddit-fr"
 # CHANNEL = "#donger"
 NICKNAME = "donger"
-PASSWORD = "frenchguyez"
+PASSWORD = ""
 ALLOWED_HOSTNAMES = ["mclose.eu"]
 # MySQL
 DATABASE = MySQLDatabase('db_name', user='', passwd='')
@@ -305,10 +305,17 @@ class DongerBot(SingleServerIRCBot):
                 reste = random.choice(self.users)
 
             if reste is not None:
-                if donger['args'] == ARGS_PSEUDO and reste.lower() not in self.users and reste != donger['default']:
-                    pass
-                else:
-                    message = donger_action.format(reste)
+                # multiples arguments
+                for arg in set(reste.split()):
+                    # si le donger veut des pseudos et que les arguments ne sont pas des usernames, on dégage
+                    if donger['args'] == ARGS_PSEUDO and arg.lower() not in self.users and arg != donger['default']:
+                        return message
+
+                # nombre de placeholders
+                nb_placeholders = len(re.findall(r"{(\w+)}", donger_action))
+                # différent du nombre d'arguments
+                if nb_placeholders == len(set(reste.split())):
+                    message = donger_action.format(*reste.split())
             else:
                 message = donger_action
 
