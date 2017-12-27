@@ -119,22 +119,15 @@ class DongerBot(SingleServerIRCBot):
                                     nick,
                                     nick, True)
 
-        self.chans = CHANNEL
-        self.nick_pass = nick_pass
-
-        self.users = []
-        self.current_channel = CHANNEL
-
-        self.stopwords = self.load_stopwords()
-
-        self.last_uses = {}
-        self.current_friend_time = time.time()
-
-        self.settings = Parametres.get(channel=self.chans)
-
         self.auteur = None
-
+        self.current_channel = CHANNEL
+        self.current_friend_time = time.time()
+        self.last_uses = {}
         self.liste_actions = {}
+        self.nick_pass = nick_pass
+        self.settings = Parametres.get(channel=self.current_channel)
+        self.stopwords = self.load_stopwords()
+        self.users = []
 
         print "DongerBot %s" % __version__
         print "Connecting to %s:%i..." % (server, port)
@@ -401,7 +394,7 @@ class DongerBot(SingleServerIRCBot):
         """Join channels after successful connection"""
         if self.nick_pass:
             c.privmsg("nickserv", "identify %s" % self.nick_pass)
-            c.join(self.chans)
+            c.join(self.current_channel)
 
     def quit(self):
         self.connection.disconnect("ヽ༼ຈل͜ຈ༽ﾉ ")
@@ -438,7 +431,8 @@ class DongerBot(SingleServerIRCBot):
         self.ferme_connexion()
 
     def send_pub_msg(self, connection, message):
-        [connection.privmsg(self.chans, msg) for msg in message.splitlines() if message is not None]
+        if message is not None:
+            [connection.privmsg(self.current_channel, msg) for msg in message.splitlines()]
 
     def traite_message(self, connection, message, infos):
         """ Traite les messages (nombre messages) """
@@ -599,8 +593,8 @@ class DongerBot(SingleServerIRCBot):
         }
 
         self.check_time()
-        self.current_channel = self.channels[CHANNEL]
-        self.users = [pseudo.lower() for pseudo in self.current_channel.users()]
+        self.current_channel = infos.target()
+        self.users = [pseudo.lower() for pseudo in self.channels[self.current_channel].users()]
 
     @staticmethod
     def display_time(seconds, granularity=5):
@@ -718,6 +712,7 @@ class DongerBot(SingleServerIRCBot):
         es.indices.refresh(index="messages")
 
     def on_action(self, c, e):
+        self.traite_event(e)
         self.write_log("action", e)
 
     def on_join(self, c, e):
@@ -730,6 +725,7 @@ class DongerBot(SingleServerIRCBot):
         self.write_log("mode", e)
 
     def on_part(self, c, e):
+        self.traite_event(e)
         self.write_log("part", e)
 
     def on_pubnotice(self, c, e):
