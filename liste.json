@@ -38,11 +38,19 @@
       "action": "ᕕ(⌐■_■)ᕗ ♪♬",
       "commande": "!hop"
     },
+    "hissiclow": {
+      "action": "┐(・。・┐) ♪♬\r\nHISSICLOW\r\nAGLAKTAE\r\n♪└╏ ･ ᗜ ･ ╏┐♬\r\nHISSICLOW\r\nAGLAKTAE\r\nAFROFAGNE\r\n♪~ ᕕ( ᐛ )ᕗ",
+      "commande": "!hissiclow"
+    },
     "bisou": {
       "action": "tiens, {0} un bisou : ( ° ͜ʖ͡°)╭∩╮",
       "commande": "!bisou",
       "args": 1,
       "caps": false
+    },
+    "drama": {
+      "action": "▬▬▬▬▬▬▬▬▬▬▬▬▬ஜ۩۞۩ஜ▬▬▬▬▬▬▬▬▬▬▬▬▬\r\n          ＰＵＴＡＩＮ ＣＥ ＮＯＵＶＥＡＵ ＤＲＡＭＡ ＥＳＴ ＳＴＹＬÉ\r\n▬▬▬▬▬▬▬▬▬▬▬▬▬ஜ۩۞۩ஜ▬▬▬▬▬▬▬▬▬▬▬▬▬",
+      "commande": "!drama"
     },
     "javascript": {
       "action": "(╬ఠ༬ఠ)୨   Râ, fais pas chier avec ton java pourri. C'est pas du javascript parce que c'est pas compilé c'est ça ? Bon ok, je me suis gouré.    ୧(ఠ༬ఠ╬)",
@@ -155,6 +163,10 @@
       "action": "™ 乂❤‿❤乂 𝕝𝕖𝕤 𝕖𝕟𝕗𝕒𝕟𝕥𝕤, 𝕧𝕠𝕦𝕤 𝕒𝕧𝕖𝕫 𝕡𝕒𝕤 𝕓𝕖𝕤𝕠𝕚𝕟 𝕕𝕖 𝕡𝕣𝕠𝕕𝕤 𝕡𝕠𝕦𝕣 𝕧𝕠𝕦𝕤 𝕒𝕞𝕦𝕤𝕖𝕣 乂❤‿❤乂 ™",
       "commande": "!prod"
     },
+    "arcep": {
+      "action": "━╤デ╦︻(▀̿̿Ĺ̯̿̿▀̿ ̿) gendarme des télécom vous êtes tous en état d'arrestation ( ͝ಠ ʖ ಠ)=ε/̵͇̿̿/’̿’̿ ̿",
+      "commande": "!arcep"
+    },
     "okc": {
       "action": "(́ง◉◞౪◟◉‵)ง JE SUIS {0} JE CREEPE SUR OKC (́ง◉◞౪◟◉‵)ง",
       "commande": "!okc",
@@ -173,6 +185,10 @@
     "hype": {
       "action": " ᕕ( ՞ ᗜ ՞ )ᕗ HYPE (๑’ᗢ’๑)ฅ HYPE ✿*∗˵╰༼✪ᗜ✪༽╯˵∗*✿ HYPE ∠( ᐛ 」∠)＿ HYPE ᕕ( ᐛ )ᕗ HYPE (゜▼゜＊）HYPE ♪♪ｖ(⌒ｏ⌒)ｖ♪♪",
       "commande": "!hype"
+    },
+    "jase": {
+      "action": "C'EST MOI 🇺🇸 JASEANDREWS L'AMERICAIN 🇺🇸  ET 👉 JE SUIS 👈 LE 🌎 CENTRE DU MONDE 🌎 ",
+      "commande": "!jase"
     },
     "coco": {
       "action": "ʕ ᓀ ᴥ ᓂ ʔ I FUCKING LOVE COCAINE ʕ ᓀ ᴥ ᓂ ʔ",
@@ -335,6 +351,10 @@
       "caps": true,
       "default": "HYCA"
     },
+    "hyca3": {
+      "action": "⋋〳 ᵕ _ʖ ᵕ 〵⋌ Hycanlox sourit-elle dans la vraie vie ? J( ‘ｰ`)し",
+      "commande": "!sourire"
+    },
     "aj": {
       "action": "( ͡° ͜ʖ ͡°)=ε✄ JE SUIS {0} JE FAIS DES CONFETTIS ( ͡° ͜ʖ ͡°)=ε✄ ",
       "commande": "!aj",
@@ -434,9 +454,36 @@
     }
   },
   "Insultes": {
+    "grep": {
+      "action": "(☞◣д◢)☞ Ecoute peau de couille, je sais faire des grep avec des regexp sur au moins 7 plate-formes et mon uptime est de 622 jours ouvrés, alors les conseils de petits branleurs dans ton genre je m'en balance, j'ai fait des traceroutes sur des sites de comptabilité qui étaient plus palpitants que ta life, alors stp noraj. (╬ﾟ◥益◤ﾟ) ╬ﾟ",
+      "commande": "!grep"
+    },
+    "debat": {
+      "action": "( ರ 益 ರೃ ) {0} t'es pas obligé de chier sur ce qui intéresse les autres juste parce que t'as des préjugés de merde ୧༼ಠ益ರೃ༽୨",
+      "commande": "!debat",
+      "args": 1,
+      "caps": false,
+      "default": "Batoune"
+    },
+    "groupe": {
+      "action": "໒( ͡; 益 ͡; )७ {0} tu vas passer de groupe de \"pote\" en groupe de \"pote\" en mettant ça sur le dos de \"la météo, de tes potes ou de ton âge\". Devine quel est le point commun dans toutes ces relations ?\r\n (☞ﾟヮﾟ)☞ Toi. ԅ( ͒ ۝ ͒ )ᕤ",
+      "commande": "!groupe",
+      "args": 1,
+      "caps": false
+    },
+    "quotidien": {
+      "action": "（￣へ￣）T'es vraiment d'une suffisance au quotidien, ça doit être dur d'être toi. （≧＊≦）",
+      "commande": "!quotidien"
+    },
     "flair": {
       "action": "Je sais pas qui il faut supplier pour avoir un flair personnalisé, alors je viens allumer un cierge dans le temple de la perte de temps : est-ce qu'on peut avoir un flair « {0} » s'il vous plaît ? Un truc bien caractéristique comme son immonde tête de bite ça serait vraiment chouette.",
       "commande": "!flair",
+      "args": 1,
+      "caps": false
+    },
+    "molemen": {
+      "action": "Il peut etre parait tirè par les cheveux, mais {0} et {1} sont les PIRES gens dans cette planète (\/) (°,,,°) (\/) (°,,,°) (\/) égal à les molemen et les gens de crabe (\/) (°,,,°) (\/) (°,,,°) (\/)(\/) (°,,,°) (\/) (°,,,°) (\/)",
+      "commande": "!molemen",
       "args": 1,
       "caps": false
     },
@@ -467,6 +514,12 @@
       "commande": "!faires",
       "args": 1,
       "caps": false
+    },
+    "mere": {
+        "action": "୧༼ಠ益ರೃ༽୨ Va niquer ta mère {0}, t'es déjà con sur /r/france tu vas pas être encore pire sur IRC enculé va ୧༼ಠ益ರೃ༽୨",
+        "commande": "!mere",
+        "args": 1,
+        "caps": false
     },
     "parasite": {
       "action": "Tu as perdu ma confiance {0}. Tu es banni à vie du sub.Tu n,apportes jamais rien de bon aux subs que tu modère.Tu es un parasite !",
@@ -542,6 +595,11 @@
       "args": 1,
       "caps": true,
       "default": "ANONBAGUETTE"
+    },
+    "persona": {
+      "action": "ᕦ| ๑ ʖ ๑ |ᕤ {0} : Parisien, 26 ans, de l'argent de côté, s'ennuie un peu au boulot, ouvert à la consommation d'alcool voire certaines drogues ᕦ| ๑ ʖ ๑ |ᕤ",
+      "commande": "!persona",
+      "args": 1
     },
     "kardashian": {
       "action": "ლ(́◉◞౪◟◉‵ლ) Y'A UNE 3EME KARDASHIAN ENCEINTE. ok ça marche, je télécharge la dernière saison ce soir #noshame ლ(́◉◞౪◟◉‵ლ)",

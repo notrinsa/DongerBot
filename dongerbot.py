@@ -2,18 +2,22 @@
 # coding: utf-8
 
 __author__ = "rinsa"
-__version__ = "1.0"
-__date__ = "12/07/2016"
+__version__ = "3.1"
+__date__ = "2018-02-07"
 __copyright__ = "Copyright (c) rinsa"
 __license__ = "GPL2"
 
 import cgi
+import config as cfg
 from datetime import datetime
 from bs4 import BeautifulSoup
 from elasticsearch import Elasticsearch
+import hashlib
 from ircbot import SingleServerIRCBot
 from irclib import nm_to_n, nm_to_h
 import json
+import locale
+import os
 import peewee
 from peewee import *
 import random
@@ -25,27 +29,7 @@ import urllib2
 
 reload(sys)
 sys.setdefaultencoding('utf8')
-
-# Server, Port, ServerPass, Channel, Nick, NickPass
-# IRC Server Configuration
-SERVER_ADDRESS = "irc.redditairfrance.fr"
-PORT = 6697
-SERVER_PASSWORD = None
-CHANNEL = "#reddit-fr"
-# CHANNEL = "#donger"
-NICKNAME = "donger"
-PASSWORD = ""
-ALLOWED_HOSTNAMES = ["mclose.eu"]
-# MySQL
-DATABASE = MySQLDatabase('db_name', user='', passwd='')
-# SUPER_SECRET_COMMAND
-SUPER_SECRET_COMMAND = ""
-
-# File Info
-PATH = "/opt/bots/donger/"
-ACTIONS_FILE = PATH + "liste.json"
-
-STOPWORDS_FILE = 'stopwords-fr.txt'
+locale.setlocale(locale.LC_ALL, 'fr_FR')
 
 # Constantes
 ARGS_NONE = 0
@@ -60,11 +44,13 @@ INTERVALS = (
     ('secondes', 1)
 )
 
+db = MySQLDatabase(cfg.database['name'], user=cfg.database['user'], passwd=cfg.database['pass'])
+
 
 class BaseModel(Model):
     """ Modèle de base """
     class Meta:
-        database = DATABASE
+        database = db
 
 
 class Stats(BaseModel):
@@ -120,8 +106,11 @@ class DongerBot(SingleServerIRCBot):
                                     nick, True)
 
         self.auteur = None
-        self.current_channel = CHANNEL
+        self.current_channel = cfg.server['channel']
         self.current_friend_time = time.time()
+
+        self.current_friend_timestamp = 1
+        self.current_friend_delay = 1
         self.last_uses = {}
         self.liste_actions = {}
         self.nick_pass = nick_pass
@@ -253,10 +242,10 @@ class DongerBot(SingleServerIRCBot):
 
             if donger_commande == "!friend":
 
-                try:
-                    prev_friend = self.settings.prev_friend
-                except Pseudo.DoesNotExist:
-                    prev_friend = None
+                # try:
+                #    prev_friend = self.settings.prev_friend
+                # except Pseudo.DoesNotExist:
+                #    prev_friend = None
 
                 try:
                     current_friend = self.settings.current_friend
@@ -268,12 +257,23 @@ class DongerBot(SingleServerIRCBot):
                     return
                 if self.settings.friend_available is False:  # dispo !friend naturel
                     return
-                if (prev_friend is not None
-                    and self.auteur['n'].lower() == self.settings.prev_friend.normalized_nickname) \
-                        or (current_friend is not None
-                            and self.auteur['n'].lower() == self.settings.current_friend.normalized_nickname):
+
+                # Maj 2018-02-07 désactivation principe de l'ami précédent
+                # if (prev_friend is not None
+                #   and self.auteur['n'].lower() == self.settings.prev_friend.normalized_nickname) \
+                #       or (current_friend is not None
+                #           and self.auteur['n'].lower() == self.settings.current_friend.normalized_nickname) :
+                if current_friend is not None \
+                        and self.auteur['n'].lower() == self.settings.current_friend.normalized_nickname:
                     """ Si l'auteur est l'ami en cours ou l'ami précédent """
                     return
+
+                # Delai
+                if time.time() - self.current_friend_timestamp < self.current_friend_delay:
+                    temps_restant = self.current_friend_delay-(time.time() - self.current_friend_timestamp)
+                    message = "J'aimerais rester encore ami avec " + self.settings.current_friend.pseudo + " pendant " \
+                              + self.display_time(temps_restant)
+                    return message
 
                 if current_friend is None:
                     message = "⭐️ {0} ⭐️ est mon 🥇 premier 🥇 ❤️ meilleur ami ❤️ de la 🌞 journée 🌞" \
@@ -283,6 +283,9 @@ class DongerBot(SingleServerIRCBot):
                         and self.settings.current_friend.normalized_nickname != self.auteur['n'].lower():
                     message = donger_action.format(self.settings.current_friend.pseudo, self.auteur['n'])
                     self.save_parametre('prev_friend', current_friend)
+
+                self.current_friend_delay = random.randint(1, 1800)
+                self.current_friend_timestamp = time.time()
 
                 """ ORM Ami """
                 try:
@@ -371,9 +374,15 @@ class DongerBot(SingleServerIRCBot):
 
     def on_privmsg(self, c, infos):
         message = infos.arguments()[0].rstrip()
+
         # Traite Event
-        self.traite_event(infos)
+        # self.traite_event(infos)
+
         # Traite Message
+
+        if message.lower().startswith("!random"):
+            return
+
         self.traite_message(c, message, infos)
 
         """ Log """
@@ -422,7 +431,6 @@ class DongerBot(SingleServerIRCBot):
 
         query = Pseudo.update(temps_ami=0)
         query.execute()
-
         self.ferme_connexion()
 
     def save_parametre(self, parametre, argument):
@@ -462,7 +470,7 @@ class DongerBot(SingleServerIRCBot):
                 > Si l'utilisateur n'a pas lancé de code avant la spam_limit
             """
 
-            if self.auteur['m'] not in ALLOWED_HOSTNAMES:
+            if self.auteur['m'] not in cfg.hostnames:
                 # Bot désactivé
                 if self.settings.bot_available is False:
                     return
@@ -495,7 +503,7 @@ class DongerBot(SingleServerIRCBot):
             """
                 dispatch spécial, admin
             """
-            if self.auteur['m'] in ALLOWED_HOSTNAMES:
+            if self.auteur['m'] in cfg.hostnames:
                 if commande.lower() in ["blacklist", "degage"]:
                     # Partie blacklist / ignore_user(pseudo, true)
                     self.ignore_user(reste, True)
@@ -524,6 +532,9 @@ class DongerBot(SingleServerIRCBot):
                 # Partie Liste / send_msg
                 envoi_message = "La liste des commandes est disponible sur www.redditairfrance.fr"
 
+            if commande.lower() == "source":
+                envoi_message = "Les sources sont disponibles sur github.com/notrinsa/DongerBot/"
+
             if commande.lower() == "random":
                 # Partie Random / get_random
                 envoi_message = self.ecrit_random(reste)
@@ -536,7 +547,7 @@ class DongerBot(SingleServerIRCBot):
                 # Partie Friends / get_friends
                 envoi_message = self.get_friends(reste)
 
-            if commande.lower() == SUPER_SECRET_COMMAND:
+            if commande.lower() == cfg.super_secret_command:
                 # Partie commande secrete
                 envoi_message = reste
 
@@ -612,7 +623,7 @@ class DongerBot(SingleServerIRCBot):
 
     @staticmethod
     def ferme_connexion():
-        DATABASE.close()
+        db.close()
 
     @staticmethod
     def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
@@ -621,7 +632,7 @@ class DongerBot(SingleServerIRCBot):
     @staticmethod
     def load_file():
         """ Récupère le fichier des actions """
-        with open(ACTIONS_FILE) as data_file:
+        with open(cfg.actions_file) as data_file:
             actions = json.load(data_file)
         full_list = {}
         # On aplatit le fichier JSON en enlevant les catégories
@@ -643,7 +654,7 @@ class DongerBot(SingleServerIRCBot):
     @staticmethod
     def load_stopwords():
         """ Récupère les mots non importants """
-        with open(STOPWORDS_FILE) as data_file:
+        with open(cfg.stopwords_file) as data_file:
             return data_file.read().split()
 
     @staticmethod
@@ -658,7 +669,7 @@ class DongerBot(SingleServerIRCBot):
 
         # Spotify
         if commande == "spotify" and reste is not None:
-            track_id = re.sub(r'^spotify:|https://[a-z]+\.spotify\.com/track/', '', reste.split()[0])
+            track_id = re.sub(r'^spotify:track:|https://[a-z]+\.spotify\.com/track/', '', reste.split()[0])
             try:
                 req = urllib2.Request('https://open.spotify.com/track/' + track_id)
                 req.add_header('Range', 'bytes={}-{}'.format(0, 99))
@@ -667,6 +678,66 @@ class DongerBot(SingleServerIRCBot):
                 message = "Track Spotify: {0} https://open.spotify.com/track/{1}".format(soup.title.string, track_id)
             except urllib2.URLError as e:
                 message = e.message.decode("utf8", 'ignore')
+
+        # Youtube
+        if commande in ['yt', 'youtube'] and reste is not None:
+            pattern = r'(youtu(?:.*/v/|.*v=|\.be/)([A-Za-z0-9_\-]{11}))'
+            yt = re.findall(pattern, reste.split()[0])
+            url = 'https://www.googleapis.com/youtube/v3/videos?id={0}&part=contentDetails,statistics,snippet&key={1}'
+            if len(yt) == 0:
+                return
+
+            try:
+                response = json.loads(urllib2.urlopen(url.format(yt[0][1], cfg.youtube_key)).read())
+                if 'error' not in response and 'items' in response and len(response['items']) > 0:
+                    snippet = response['items'][0]['snippet']
+                    stats = response['items'][0]['statistics']
+                    if 'likeCount' in stats and float(stats['likeCount']) > 0:
+                        ratings = ('%.2f' % round(5 - (float(stats['dislikeCount']) / float(stats['likeCount'])),
+                                                  2)) + "/5"
+                    else:
+                        ratings = "No rating available"
+
+                    message = "Title : " + snippet['title']
+
+                    if 'viewCount' in stats:
+                        message += ", rating : " \
+                                   + ratings + " with " \
+                                   + locale.format('%.0f', float(stats['viewCount']), grouping=True) \
+                                   + " views"
+                    else:
+                        message += " (live)"
+
+            except urllib2.URLError as e:
+                message = "Error : " + str(e.errno) + " " + e.reason
+
+        # Partie IRCCloud
+        if commande in ['rehost', 'img', 'image'] and reste is not None:
+            expression = re.compile("^(http|https)://(" + '|'.join(cfg.rehost['domains']) + ")")
+            if expression.search(reste) is not None:
+                try:
+
+                    # Patch GIFV imgur
+                    reste = reste.replace('gifv', 'mp4') if reste.endswith("gifv") else reste
+
+                    filename = hashlib.md5(str(time.time()*1000)).hexdigest() + '-' + os.path.basename(reste)
+                    f = urllib2.urlopen(reste)
+                    data = f.read()
+
+                    now = datetime.now()
+
+                    sub_folders = now.strftime("%Y") + "/" + now.strftime("%m") + "/" + now.strftime("%d") + "/"
+
+                    if not os.path.exists(cfg.rehost['folder'] + sub_folders):
+                        os.makedirs(cfg.rehost['folder'] + sub_folders, 0755)
+
+                    with open(cfg.rehost['folder'] + sub_folders + filename, 'wb') as fichier:
+                        fichier.write(data)
+                        fichier.close()
+                        message = "Rehost : " + cfg.rehost['url'] + sub_folders + filename
+
+                except urllib2.URLError as e:
+                    message = e.message.decode('utf8', 'ignore')
 
         return message
 
@@ -737,7 +808,7 @@ class DongerBot(SingleServerIRCBot):
 
 def main():
     # Start the bot
-    bot = DongerBot(SERVER_ADDRESS, PORT, SERVER_PASSWORD, NICKNAME, PASSWORD)
+    bot = DongerBot(cfg.server['address'], cfg.server['port'], cfg.server['pass'], cfg.donger_nick, cfg.donger_pass)
     try:
         bot.start()
     except KeyboardInterrupt:
