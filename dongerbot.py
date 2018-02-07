@@ -311,7 +311,17 @@ class DongerBot(SingleServerIRCBot):
                 nb_placeholders = len(re.findall(r"{(\w+)}", donger_action))
                 # différent du nombre d'arguments
                 if nb_placeholders == len(set(reste.split())):
-                    message = donger_action.format(*reste.split())
+                    try:
+                        message = donger_action.format(
+                            *reste.encode('utf-8', 'ignore').split())
+                    except UnicodeDecodeError:
+                        message = None
+                elif nb_placeholders == 1 and len(set(reste.split())) > 1:
+                    try:
+                        message = donger_action.format(reste.encode('utf-8', 'ignore'))
+                    except UnicodeDecodeError:
+                        message = None
+
             else:
                 message = donger_action
 
