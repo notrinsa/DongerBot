@@ -495,6 +495,7 @@ class DongerBot(SingleServerIRCBot):
                     self.last_uses[self.auteur['fn']] = time.time()
                 else:
                     if int(round(time.time() - self.last_uses[self.auteur['fn']])) < int(self.settings.spam_limit):
+                        self.send_pub_msg(connection, "uhn 😩")
                         return
                     else:
                         self.last_uses[self.auteur['fn']] = time.time()
