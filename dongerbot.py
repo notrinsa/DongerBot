@@ -284,7 +284,7 @@ class DongerBot(SingleServerIRCBot):
                     message = donger_action.format(self.settings.current_friend.pseudo, self.auteur['n'])
                     self.save_parametre('prev_friend', current_friend)
 
-                self.current_friend_delay = random.randint(1, 1800)
+                self.current_friend_delay = random.randint(1, 900)
                 self.current_friend_timestamp = time.time()
 
                 """ ORM Ami """
@@ -440,6 +440,9 @@ class DongerBot(SingleServerIRCBot):
         """ Reset les amis """
 
         query = Pseudo.update(temps_ami=0)
+        self.save_parametre("prev_friend", None)
+        self.save_parametre("current_friend", None)
+        self.current_friend_delay = 0
         query.execute()
         self.ferme_connexion()
 
@@ -535,6 +538,8 @@ class DongerBot(SingleServerIRCBot):
                             envoi_message = "Paramètre " + reste + " : " + str(getattr(self.settings, reste))
                     except Pseudo.DoesNotExist:
                         envoi_message = "Pas de pseudo sélectionné"
+                if commande.lower() in ["update"]:
+                    self.update_settings()
 
             """
                 dispatch spécial, not admin
@@ -596,7 +601,8 @@ class DongerBot(SingleServerIRCBot):
         except Pseudo.DoesNotExist:
             user = Pseudo.create(pseudo=self.auteur['n'], normalized_nickname=self.auteur['n'].lower())
 
-        Archives.create(pseudo_id=user, commande=stats, texte=reste)
+        texte = reste.encode("utf-8", "ignore") if reste is not None else None
+        Archives.create(pseudo_id=user, commande=stats, texte=texte)
         user.nombre_commandes = user.nombre_commandes + 1 if user.nombre_commandes is not None else 1
         user.save()
 
@@ -617,6 +623,9 @@ class DongerBot(SingleServerIRCBot):
         self.check_time()
         self.current_channel = infos.target()
         self.users = [pseudo.lower() for pseudo in self.channels[self.current_channel].users()]
+
+    def update_settings(self):
+        self.settings = Parametres.get(channel=self.current_channel)
 
     @staticmethod
     def display_time(seconds, granularity=5):
