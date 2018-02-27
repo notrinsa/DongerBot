@@ -107,14 +107,14 @@ class DongerBot(SingleServerIRCBot):
 
         self.auteur = None
         self.current_channel = cfg.server['channel']
-        self.current_friend_time = time.time()
+        self.settings = Parametres.get(channel=self.current_channel)
 
-        self.current_friend_timestamp = 1
+        self.current_friend_time = self.get_current_friend_time()
+        self.current_friend_timestamp = time.time()
         self.current_friend_delay = 1
         self.last_uses = {}
         self.liste_actions = {}
         self.nick_pass = nick_pass
-        self.settings = Parametres.get(channel=self.current_channel)
         self.stopwords = self.load_stopwords()
         self.users = []
 
@@ -140,7 +140,7 @@ class DongerBot(SingleServerIRCBot):
             # Amis
             if argument in ['true', '1', 'True']:
                 self.save_parametre("friend_available_override", True)
-            elif argument in ['false', '0', 'False']:
+            elif argument in ['false', '0', 'False', 'off']:
                 self.save_parametre("friend_available_override", False)
                 self.save_parametre("current_friend", None)
             elif argument == 'reset':
@@ -161,6 +161,8 @@ class DongerBot(SingleServerIRCBot):
             return
         if 9 > int(time.strftime("%H")) >= 0 and self.settings.friend_available is True:
             self.save_parametre("friend_available", False)
+            self.save_parametre("prev_friend", None)
+            self.save_parametre("current_friend", None)
         elif int(time.strftime("%H")) >= 9 and self.settings.friend_available is False:
             self.save_parametre("friend_available", True)
             self.save_parametre("prev_friend", None)
@@ -283,9 +285,9 @@ class DongerBot(SingleServerIRCBot):
                         and self.settings.current_friend.normalized_nickname != self.auteur['n'].lower():
                     message = donger_action.format(self.settings.current_friend.pseudo, self.auteur['n'])
                     self.save_parametre('prev_friend', current_friend)
+                    self.current_friend_time = self.get_current_friend_time(self.auteur['n'])
 
-                self.current_friend_delay = random.randint(1, 900)
-                self.current_friend_timestamp = time.time()
+                self.current_friend_delay = random.randint(180, 420)
 
                 """ ORM Ami """
                 try:
@@ -294,6 +296,8 @@ class DongerBot(SingleServerIRCBot):
                     auteur = Pseudo.create(pseudo=self.auteur['n'], normalized_nickname=self.auteur['n'].lower())
                 self.save_parametre('current_friend', auteur)  # Changement de l'ami de donger
                 self.refresh_friends()
+
+                self.current_friend_timestamp = time.time()
 
         else:
             """ Si la commande nécessite un pseudo et qu'il n'y en a pas, on random un utilisateur """
@@ -327,6 +331,17 @@ class DongerBot(SingleServerIRCBot):
 
         return message
 
+    def get_current_friend_time(self, friend=None):
+        """ Récup le temps de l'ami """
+        try:
+            if friend is None:
+                friend = self.settings.current_friend.normalized_nickname
+            ami = Pseudo.get(Pseudo.normalized_nickname == friend.lower())
+            self.ferme_connexion()
+            return ami.temps_ami
+        except Pseudo.DoesNotExist:
+            return False
+
     def get_friends(self, friend=None):
         """ Récupération des stats des amis """
 
@@ -344,7 +359,8 @@ class DongerBot(SingleServerIRCBot):
             """ ORM Récup top friends """
             sendmsg = "Les 5 meilleurs amis de donger : "
             for ami in Pseudo.select().order_by(Pseudo.temps_ami.desc()).limit(5):
-                sendmsg += ami.pseudo + " pendant " + self.display_time(ami.temps_ami) + "; "
+                if ami.temps_ami > 1:
+                    sendmsg += ami.pseudo + " pendant " + self.display_time(ami.temps_ami) + "; "
             sendmsg = sendmsg[:-2]
 
         return sendmsg
@@ -428,10 +444,9 @@ class DongerBot(SingleServerIRCBot):
             """ ORM Get User"""
             try:
                 ami = Pseudo.get(Pseudo.id == self.settings.current_friend)
-                ami.temps_ami += round(time.time() - self.current_friend_time)
+                ami.temps_ami = self.current_friend_time + round(time.time() - self.current_friend_timestamp)
                 ami.save()
                 self.ferme_connexion()
-                self.current_friend_time = time.time()
 
             except Pseudo.DoesNotExist:
                 pass
@@ -601,14 +616,17 @@ class DongerBot(SingleServerIRCBot):
         except Pseudo.DoesNotExist:
             user = Pseudo.create(pseudo=self.auteur['n'], normalized_nickname=self.auteur['n'].lower())
 
-        texte = reste.encode("utf-8", "ignore") if reste is not None else None
-        Archives.create(pseudo_id=user, commande=stats, texte=texte)
+        Archives.create(pseudo_id=user,
+                        commande=stats,
+                        texte=reste.encode("utf-8", "ignore") if reste is not None else None)
         user.nombre_commandes = user.nombre_commandes + 1 if user.nombre_commandes is not None else 1
         user.save()
 
         self.ferme_connexion()
 
     def traite_event(self, infos):
+        self.check_time()
+
         # refresh actual friend
         self.refresh_friends()
 
@@ -620,7 +638,6 @@ class DongerBot(SingleServerIRCBot):
             'n': nm_to_n(infos.source())  # nickname  (rinsa)
         }
 
-        self.check_time()
         self.current_channel = infos.target()
         self.users = [pseudo.lower() for pseudo in self.channels[self.current_channel].users()]
 
@@ -739,6 +756,8 @@ class DongerBot(SingleServerIRCBot):
 
                     # Patch GIFV imgur
                     reste = reste.replace('gifv', 'mp4') if reste.endswith("gifv") else reste
+                    # Cas gfycat
+                    reste = reste.replace('gfycat', 'giant.gfycat') + '.webm' if 'gfycat' in reste else reste
 
                     filename = hashlib.md5(str(time.time()*1000)).hexdigest() + '-' + os.path.basename(reste)
                     f = urllib2.urlopen(reste)
