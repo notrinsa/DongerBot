@@ -369,21 +369,20 @@ class DongerBot(SingleServerIRCBot):
         """ Récupère les stats d'une commande """
 
         if commande is not None:
-
-            """ ORM Récup stats commande """
-            _commande, created = Stats.get_or_create(commande=commande)
-            sendmsg = "Stats pour la commande " + commande + " : envoyée " + str(_commande.nombre) + " fois" \
-                if created is False \
-                else "Pas de stats pour la commande " + commande + "."
+            if commande in self.liste_actions:
+                """ ORM Récup stats commande """
+                _commande, created = Stats.get_or_create(commande=commande)
+                sendmsg = "Stats pour la commande " + commande + " : envoyée " + str(_commande.nombre) + " fois"
+                self.ferme_connexion()
+            else:
+                sendmsg = "Pas de stats pour la commande " + commande + "."
 
         else:
-
             """ ORM Récup top stats """
             sendmsg = "5 commandes les plus utilisées :  "
             for commandes in Stats.select().order_by(Stats.nombre.desc()).limit(5):
                 sendmsg += commandes.commande + " : " + str(commandes.nombre) + " fois    "
-
-        self.ferme_connexion()
+            self.ferme_connexion()
 
         return sendmsg
 
@@ -606,22 +605,24 @@ class DongerBot(SingleServerIRCBot):
     def traite_donger(self, commande, reste=None):
         """ Envoi le donger sur le chan et traitements annexes (logs, sql, friends, check_time ...) """
 
-        """ ORM Ajout stats commandes """
-        stats, created = Stats.get_or_create(commande=commande, defaults={'nombre': 1})
-        if created is False:
-            stats.nombre += 1
-            stats.save()
-
         """ ORM Ajout archives """
         try:
             user = Pseudo.get(Pseudo.normalized_nickname == self.auteur['n'].lower())
         except Pseudo.DoesNotExist:
             user = Pseudo.create(pseudo=self.auteur['n'], normalized_nickname=self.auteur['n'].lower())
 
-        Archives.create(pseudo_id=user,
-                        commande=stats,
-                        texte=reste.encode("utf-8", "ignore") if reste is not None else None)
-        user.nombre_commandes = user.nombre_commandes + 1 if user.nombre_commandes is not None else 1
+        """ ORM Ajout stats commandes """
+        if commande in self.liste_actions:
+            stats, created = Stats.get_or_create(commande=commande, defaults={'nombre': 1})
+            if created is False:
+                stats.nombre += 1
+                stats.save()
+
+            Archives.create(pseudo_id=user,
+                            commande=stats,
+                            texte=reste.encode("utf-8", "ignore") if reste is not None else None)
+            user.nombre_commandes = user.nombre_commandes + 1 if user.nombre_commandes is not None else 1
+
         user.save()
 
         self.ferme_connexion()
