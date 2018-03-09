@@ -34,6 +34,10 @@
     }
   },
   "Copypasta": {
+    "info": {
+      "action": "ᕕ(⌐□ل͜□)ᕗ À TITRE INFORMATIF : LA QUASI-TOTALITÉ DES PROPOS 🔥 INFLAMMATOIRES 🔥 SONT TENUS PAR HYCA ╰༼ ⋋ ‸ ⋌ ༽╯ ET ANARCHO-JOSPINISTE ୧( ಠ Д ಠ )୨",
+      "commande": "!info"
+    },
     "hop": {
       "action": "ᕕ(⌐■_■)ᕗ ♪♬",
       "commande": "!hop"
@@ -133,6 +137,19 @@
       "args": 1,
       "caps": false
     },
+    "glace": {
+      "action": "( ´ Д ｀ )ᕗ {0} ? Typiquement le genre de nana qui aimerait une glace saveur couilles de {1} si elle le voyait en vrai( ´ Д ｀ )ᕗ",
+      "commande": "!glace",
+      "args": 1,
+      "caps": false
+    },
+    "sequoia": {
+      "action": "{0} son seul défaut c'est qui a un séquoia dans le derrière mais il s'améliore, c'est bientot fini d'etre débroussaillé",
+      "commande": "!sequoia",
+      "args": 1,
+      "caps": false,
+      "default": "Raie-dite"
+    },
     "victoria": {
       "action": "ԅ། ຈ ◞౪◟ຈ །و Tu vas m'envoyer quoi en privé ? Une photo d'un développeur UNIX qui fait de la muscu avec une victoria secret qui lui pompe la bite pendant qu'il trade de la crypto monnaie ? ԅ། ຈ ◞౪◟ຈ །و ",
       "commande": "!victoria"
@@ -144,6 +161,12 @@
     "kekette": {
       "action": "Hier je me suis tapée la plus grosse kékette que j'ai jamais vu ! Dis toi qu'il me manquait 3cm à mettre dans ma bouche alors que les gorges profondes sont ma spécialité, d'habitude je mets tout ! Elle était surtout très large.. Et bref, j'ai mal à la chatte",
       "commande": "!kekette"
+    },
+    "dur": {
+      "action": "J'ouvris la porte. Immédiatement, j'ai heurté quelque chose -- quelque chose de doux, endormi, et pourtant ... dur. C'était {0}",
+      "commande": "!dur",
+      "args": 2,
+      "caps": false
     },
     "cul": {
       "action": "je me suis fait lécher le cul pour la première fois j'ai adoré",
@@ -413,7 +436,7 @@
       "default": "Hyca"
     },
     "cronch": {
-      "action": "♪~ ᕕ( ᐛ )ᕗ CRONCH CRONCH CRONCH JE SUIS LE COLLEGUE D' {0} CRONCH CRONCH CRONCH ♪~ ᕕ( ᐛ )ᕗ",
+      "action": "♪~ ᕕ( ᐛ )ᕗ CRONCH CRONCH CRONCH JE SUIS LE COLLEGUE DE {0} CRONCH CRONCH CRONCH ♪~ ᕕ( ᐛ )ᕗ",
       "commande": "!cronch",
       "args": 1,
       "caps": true,
@@ -454,6 +477,18 @@
     }
   },
   "Insultes": {
+    "mur": {
+      "action": "( ▀ 益 ▀ ) Quand je rentre du boulot la nuit je retrouve systématiquement {0} entre ses jambes ou sur mon oreiller et j'ai vraiment envie ( mais vraiment ) de lui éclater sa petite gueule de con violemment contre un mur(۶ૈ ᵒ̌ Дᵒ̌)۶ૈ=͟͟͞͞ ⌨",
+      "commande": "!mur",
+      "args": 2,
+      "caps": false
+    },
+    "malsain": {
+      "action": "(つ◉益◉)つ {0} est pourri et malsain. (ఠ్ఠ ˓̭ ఠ్ఠ) Drogues, maladies vénériennes, SIDA omniprésent, alcoolisme, dépravation, orgies, perversion... ᕕ（ಥʖ̯ಥ）ᕗ ",
+      "commande": "!malsain",
+      "args": 2,
+      "caps": false
+    },
     "grep": {
       "action": "(☞◣д◢)☞ Ecoute peau de couille, je sais faire des grep avec des regexp sur au moins 7 plate-formes et mon uptime est de 622 jours ouvrés, alors les conseils de petits branleurs dans ton genre je m'en balance, j'ai fait des traceroutes sur des sites de comptabilité qui étaient plus palpitants que ta life, alors stp noraj. (╬ﾟ◥益◤ﾟ) ╬ﾟ",
       "commande": "!grep"
@@ -588,6 +623,16 @@
       "commande": "!bash",
       "args": 1,
       "caps": false
+    },
+    "coeur": {
+      "action": "⋌༼ •̀ ⌂ •́ ༽⋋ {0} le rapport c'est que mettre des coeurs aux gens que tu ne connais pas, qu'ils soient des hommes ou des femmes, ça peut créer une mauvaise impression ⋌༼ •̀ ⌂ •́ ༽⋋",
+      "commande": "!coeur",
+      "args": 1,
+      "caps": false
+    },
+    "uhn": {
+      "action": "uhn 😩",
+      "commande": "!uhn"
     },
     "chaton": {
       "action": "{0} EST-CE QUE TU PEUX LEAK DES PHOTOS DU CHATON STP",
