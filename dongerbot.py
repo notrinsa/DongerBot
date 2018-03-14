@@ -10,25 +10,22 @@ __license__ = "GPL2"
 import cgi
 import config as cfg
 from datetime import datetime
+from colors import Colors
 from bs4 import BeautifulSoup
-import db
+from db import * 
 from elasticsearch import Elasticsearch
 import hashlib
 from ircbot import SingleServerIRCBot
-from irclib import nm_to_n, nm_to_h
+from irclib import nm_to_n, nm_to_h, parse_nick_modes
 import json
 import locale
 import os
 import random
 import re
 import string
-import sys
 import time
 import urllib2
 
-reload(sys)
-sys.setdefaultencoding('utf8')
-locale.setlocale(locale.LC_ALL, 'fr_FR')
 
 # Constantes
 ARGS_NONE = 0
@@ -51,10 +48,16 @@ class DongerBot(SingleServerIRCBot):
                                     [(server, port, server_pass)],
                                     nick,
                                     nick, True)
+        # Créé les tables
+        create_tables()
 
         self.auteur = None
         self.current_channel = cfg.server['channel']
-        self.settings = db.Parametres.get(channel=self.current_channel)
+
+        try:
+            self.settings = Settings.get(channel=self.current_channel)
+        except Settings.DoesNotExist:
+            self.settings = Settings.create(channel=self.current_channel)
 
         self.current_friend_time = self.get_current_friend_time()
         self.current_friend_timestamp = time.time()
@@ -185,7 +188,7 @@ class DongerBot(SingleServerIRCBot):
                 """ Commande who """
                 try:
                     reste = self.settings.current_friend.pseudo
-                except db.Pseudo.DoesNotExist:
+                except User.DoesNotExist:
                     reste = "Personne"
                 message = donger_action.format(reste)
 
@@ -193,13 +196,8 @@ class DongerBot(SingleServerIRCBot):
 
                 # try:
                 #    prev_friend = self.settings.prev_friend
-                # except db.Pseudo.DoesNotExist:
+                # except User.DoesNotExist:
                 #    prev_friend = None
-
-                try:
-                    current_friend = self.settings.current_friend
-                except db.Pseudo.DoesNotExist:
-                    current_friend = None
 
                 """ Commande friend """
                 if self.settings.friend_available_override is False:  # Override admin !friend
@@ -212,7 +210,8 @@ class DongerBot(SingleServerIRCBot):
                 #   and self.auteur['n'].lower() == self.settings.prev_friend.normalized_nickname) \
                 #       or (current_friend is not None
                 #           and self.auteur['n'].lower() == self.settings.current_friend.normalized_nickname) :
-                if current_friend is not None \
+
+                if self.settings.current_friend is not None \
                         and self.auteur['n'].lower() == self.settings.current_friend.normalized_nickname:
                     """ Si l'auteur est l'ami en cours ou l'ami précédent """
                     return
@@ -224,23 +223,23 @@ class DongerBot(SingleServerIRCBot):
                               + self.display_time(temps_restant)
                     return message
 
-                if current_friend is None:
+                if self.settings.current_friend is None:
                     message = "⭐️ {0} ⭐️ est mon 🥇 premier 🥇 ❤️ meilleur ami ❤️ de la 🌞 journée 🌞" \
                         .format(self.auteur['n'])
 
-                elif current_friend is not None \
+                elif self.settings.current_friend is not None \
                         and self.settings.current_friend.normalized_nickname != self.auteur['n'].lower():
                     message = donger_action.format(self.settings.current_friend.pseudo, self.auteur['n'])
-                    self.save_parametre('prev_friend', current_friend)
+                    self.save_parametre('prev_friend', self.settings.current_friend)
                     self.current_friend_time = self.get_current_friend_time(self.auteur['n'])
 
                 self.current_friend_delay = random.randint(180, 420)
 
                 """ ORM Ami """
                 try:
-                    auteur = db.Pseudo.get(db.Pseudo.normalized_nickname == self.auteur['n'].lower())
-                except db.Pseudo.DoesNotExist:
-                    auteur = db.Pseudo.create(pseudo=self.auteur['n'], normalized_nickname=self.auteur['n'].lower())
+                    auteur = User.get(User.normalized_nickname == self.auteur['n'].lower())
+                except User.DoesNotExist:
+                    auteur = User.create(pseudo=self.auteur['n'], normalized_nickname=self.auteur['n'].lower())
                 self.save_parametre('current_friend', auteur)  # Changement de l'ami de donger
                 self.refresh_friends()
 
@@ -278,15 +277,13 @@ class DongerBot(SingleServerIRCBot):
 
         return message
 
-    def get_current_friend_time(self, friend=None):
+    def get_current_friend_time(self):
         """ Récup le temps de l'ami """
-        try:
-            if friend is None:
-                friend = self.settings.current_friend.normalized_nickname
-            ami = db.Pseudo.get(db.Pseudo.normalized_nickname == friend.lower())
+        if self.settings.current_friend is not None:
+            temps = self.settings.current_friend.time_friend
             self.ferme_connexion()
-            return ami.temps_ami
-        except db.Pseudo.DoesNotExist:
+            return temps
+        else:
             return False
 
     def get_friends(self, friend=None):
@@ -296,18 +293,18 @@ class DongerBot(SingleServerIRCBot):
 
             """ ORM Récup friend """
             try:
-                ami = db.Pseudo.get(db.Pseudo.normalized_nickname == friend.lower())
-                sendmsg = friend + " a été le meilleur ami de donger pendant " + str(self.display_time(ami.temps_ami))
-            except db.Pseudo.DoesNotExist:
+                ami = User.get(User.normalized_nickname == friend.lower())
+                sendmsg = friend + " a été le meilleur ami de donger pendant " + str(self.display_time(ami.time_friend))
+            except User.DoesNotExist:
                 sendmsg = friend + " n'a jamais été le meilleur ami de donger :("
 
         else:
 
             """ ORM Récup top friends """
             sendmsg = "Les 5 meilleurs amis de donger : "
-            for ami in db.Pseudo.select().order_by(db.Pseudo.temps_ami.desc()).limit(5):
-                if ami.temps_ami > 1:
-                    sendmsg += ami.pseudo + " pendant " + self.display_time(ami.temps_ami) + "; "
+            for ami in User.select().order_by(User.time_friend.desc()).limit(5):
+                if ami.time_friend > 1:
+                    sendmsg += ami.pseudo + " pendant " + self.display_time(ami.time_friend) + "; "
             sendmsg = sendmsg[:-2]
 
         return sendmsg
@@ -318,7 +315,7 @@ class DongerBot(SingleServerIRCBot):
         if commande is not None:
             if commande in self.liste_actions:
                 """ ORM Récup stats commande """
-                _commande, created = db.Stats.get_or_create(commande=commande)
+                _commande, created = Commandes.get_or_create(command=commande)
                 sendmsg = "Stats pour la commande " + commande + " : envoyée " + str(_commande.nombre) + " fois"
                 self.ferme_connexion()
             else:
@@ -327,8 +324,8 @@ class DongerBot(SingleServerIRCBot):
         else:
             """ ORM Récup top stats """
             sendmsg = "5 commandes les plus utilisées :  "
-            for commandes in db.Stats.select().order_by(db.Stats.nombre.desc()).limit(5):
-                sendmsg += commandes.commande + " : " + str(commandes.nombre) + " fois    "
+            for commandes in Commandes.select().order_by(Commandes.count.desc()).limit(5):
+                sendmsg += commandes.commande + " : " + str(commandes.count) + " fois    "
             self.ferme_connexion()
 
         return sendmsg
@@ -336,9 +333,9 @@ class DongerBot(SingleServerIRCBot):
     def ignore_user(self, user, remove):
         """ Ignore un utilisateur """
         try:
-            pseudo = db.Pseudo.get(db.Pseudo.normalized_nickname == user.lower())
-        except db.Pseudo.DoesNotExist:
-            pseudo = db.Pseudo.create(pseudo=user, normalized_nickname=user.lower())
+            pseudo = User.get(User.normalized_nickname == user.lower())
+        except User.DoesNotExist:
+            pseudo = User.create(pseudo=user, normalized_nickname=user.lower())
 
         pseudo.blacklist = remove
         pseudo.save()
@@ -364,12 +361,39 @@ class DongerBot(SingleServerIRCBot):
         """ Traitement des messages publics """
 
         message = infos.arguments()[0].rstrip()
+        if message.startswith("."):
+            splitted_message = message[1:].split()
+            if len(splitted_message[0]) > 4:
+                pass
+            else:
+                if len(splitted_message) > 1:
+                    commandes = list(splitted_message[0])
+
+                    if "c" in commandes:
+                        sendmsg = message[len(splitted_message[0]) + len(splitted_message[1]) + 3:]
+                    else:
+                        sendmsg = message[len(splitted_message[0]) + 2:]
+
+                    for commande in commandes:
+                        if commande == "c" and len(splitted_message) > 2:
+                            couleurs = splitted_message[1].split(",")
+                            sendmsg = Colors().write_color(message=sendmsg,
+                                                           fg=couleurs[0] if len(couleurs[0]) > 0 else None,
+                                                           bg=couleurs[1] if len(couleurs) > 1 else None)
+                        else:
+                            m = "_" + commande
+                            if hasattr(Colors(), m):
+                                sendmsg = getattr(Colors(), m)(sendmsg)
+
+                else:
+                    sendmsg = Colors().liste()
+                self.send_pub_msg(c, sendmsg)
 
         """ Traite Event """
-        self.traite_event(infos)
+        # self.traite_event(infos)
 
         """ Traite le message """
-        self.traite_message(c, message, infos)
+        # self.traite_message(c, message, infos)
 
     def on_welcome(self, c, e):
         """Join channels after successful connection"""
@@ -389,18 +413,18 @@ class DongerBot(SingleServerIRCBot):
         if self.settings.friend_available is True:
             """ ORM Get User"""
             try:
-                ami = db.Pseudo.get(db.Pseudo.id == self.settings.current_friend)
-                ami.temps_ami = self.current_friend_time + round(time.time() - self.current_friend_timestamp)
+                ami = User.get(User.id == self.settings.current_friend)
+                ami.time_friend = self.current_friend_time + round(time.time() - self.current_friend_timestamp)
                 ami.save()
                 self.ferme_connexion()
 
-            except db.Pseudo.DoesNotExist:
+            except User.DoesNotExist:
                 pass
 
     def reset_friends(self):
         """ Reset les amis """
 
-        query = db.Pseudo.update(temps_ami=0)
+        query = User.update(time_friend=0)
         self.save_parametre("prev_friend", None)
         self.save_parametre("current_friend", None)
         self.current_friend_delay = 0
@@ -421,10 +445,10 @@ class DongerBot(SingleServerIRCBot):
 
         """ ORM Maj Utilisateur """
         try:
-            user = db.Pseudo.get(db.Pseudo.normalized_nickname == self.auteur['n'].lower())
-        except db.Pseudo.DoesNotExist:
-            user = db.Pseudo.create(pseudo=self.auteur['n'], normalized_nickname=self.auteur['n'].lower())
-        user.nombre_messages = user.nombre_messages + 1 if user.nombre_messages is not None else 1
+            user = User.get(User.normalized_nickname == self.auteur['n'].lower())
+        except User.DoesNotExist:
+            user = User.create(pseudo=self.auteur['n'], normalized_nickname=self.auteur['n'].lower())
+        user.count_messages = user.count_messages + 1 if user.count_messages is not None else 1
         user.save()
         self.ferme_connexion()
 
@@ -450,10 +474,10 @@ class DongerBot(SingleServerIRCBot):
                     return
                 # Utilisateurs blacklistés
                 try:
-                    db.Pseudo.get(
-                        db.Pseudo.normalized_nickname == self.auteur['n'].lower(), db.Pseudo.blacklist is True)
+                    User.get(
+                        User.normalized_nickname == self.auteur['n'].lower(), User.blacklist is True)
                     return
-                except db.Pseudo.DoesNotExist:
+                except User.DoesNotExist:
                     pass
                 if self.auteur['fn'] not in self.last_uses:
                     # Rajout dans le filtre
@@ -500,7 +524,7 @@ class DongerBot(SingleServerIRCBot):
                     try:
                         if getattr(self.settings, reste, None) is not None:
                             envoi_message = "Paramètre " + reste + " : " + str(getattr(self.settings, reste))
-                    except db.Pseudo.DoesNotExist:
+                    except User.DoesNotExist:
                         envoi_message = "Pas de pseudo sélectionné"
                 if commande.lower() in ["update"]:
                     self.update_settings()
@@ -555,21 +579,21 @@ class DongerBot(SingleServerIRCBot):
 
         """ ORM Ajout archives """
         try:
-            user = db.Pseudo.get(db.Pseudo.normalized_nickname == self.auteur['n'].lower())
-        except db.Pseudo.DoesNotExist:
-            user = db.Pseudo.create(pseudo=self.auteur['n'], normalized_nickname=self.auteur['n'].lower())
+            user = User.get(User.normalized_nickname == self.auteur['n'].lower())
+        except User.DoesNotExist:
+            user = User.create(pseudo=self.auteur['n'], normalized_nickname=self.auteur['n'].lower())
 
         """ ORM Ajout stats commandes """
         if commande in self.liste_actions:
-            stats, created = db.Stats.get_or_create(commande=commande, defaults={'nombre': 1})
+            stats, created = Commandes.get_or_create(command=commande, defaults={'nombre': 1})
             if created is False:
                 stats.nombre += 1
                 stats.save()
 
-            db.Archives.create(pseudo_id=user,
-                               commande=stats,
-                               texte=reste.encode("utf-8", "ignore") if reste is not None else None)
-            user.nombre_commandes = user.nombre_commandes + 1 if user.nombre_commandes is not None else 1
+            Archives.create(pseudo_id=user,
+                            command=stats,
+                            texte=reste.encode("utf-8", "ignore") if reste is not None else None)
+            user.count_commands = user.count_commands + 1 if user.count_commands is not None else 1
 
         user.save()
 
@@ -593,7 +617,7 @@ class DongerBot(SingleServerIRCBot):
         self.users = [pseudo.lower() for pseudo in self.channels[self.current_channel].users()]
 
     def update_settings(self):
-        self.settings = db.Parametres.get(channel=self.current_channel)
+        self.settings = Settings.get(channel=self.current_channel)
 
     @staticmethod
     def display_time(seconds, granularity=5):
@@ -611,7 +635,7 @@ class DongerBot(SingleServerIRCBot):
 
     @staticmethod
     def ferme_connexion():
-        db.close()
+        close()
 
     @staticmethod
     def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
@@ -764,9 +788,9 @@ class DongerBot(SingleServerIRCBot):
             'info_message': info_content
         }
 
-        es = Elasticsearch()
-        es.index(index="messages", doc_type="message", body=message)
-        es.indices.refresh(index="messages")
+        # es = Elasticsearch()
+        # es.index(index="messages", doc_type="message", body=message)
+        # es.indices.refresh(index="messages")
 
     @staticmethod
     def on_nicknameinuse(c, e):
